@@ -35,7 +35,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           @click="row.toggleDetails"
           class="mr-2"
         >
-          {{ row.detailsShowing ? "Hide" : "Show" }} content
+          {{ row.detailsShowing ? "Hide" : "Preview" }} content
         </b-button>
         <b-button
           squared
@@ -92,14 +92,21 @@ export default {
   },
   methods: {
     editTemplate(template) {
+     
       if (template) {
         let formProps = {
           editMode: true,
           initialName: template.name,
           initialDescription: template.description,
-          initialImageFields:
-            template.displayContent && template.displayContent.imageFields,
+          initialResolution: template.resolution,
+          initialImageFields: 
+          template.displayContent && template.displayContent.imageFields,
           templateId: template.uuid,
+          initialMultipleRoom: template.multipleRoom,
+          initialFooter: template.footer,
+          initialHeader:template.header,
+          initialRoomData: template.roomData,
+          initialNumRooms: template.roomData[0]||1,
         };
         this.$router.push({ name: "Template Form", params: formProps });
       }
