@@ -10,6 +10,7 @@ import Login from "@/components/Login.vue";
 import Templates from "@/components/templates/Templates.vue";
 import TemplateForm from "@/components/templates/TemplateForm.vue";
 import Unauthorized from "@/components/Unauthorized.vue";
+import DisplayScheduleForm from "@/components/displays/DisplayScheduleForm.vue";
 
 Vue.use(Router);
 
@@ -74,6 +75,15 @@ const router = new Router({
       meta: {
         isAuthenticated: true
       }
+    },
+     {
+      path: "/schedule-form/", //:displayUuid",
+      name: "Display Schedule Form",
+      component: DisplayScheduleForm,
+      props: true,
+      meta: {
+        isAuthenticated: true
+     },
     },
   ],
 });
