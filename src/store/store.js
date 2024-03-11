@@ -141,6 +141,7 @@ export default new Vuex.Store({
       let index = state.templates.indexOf(
         state.templates.filter(templates => templates.uuid == updatedContent.templateUuid)[0]
       );
+      
       if (index > -1) {
         Vue.set(state.templates[index], "displayContent", updatedContent.displayContent);
       }
@@ -151,7 +152,7 @@ export default new Vuex.Store({
       }, []);
       let index = flatScheduledContents.indexOf(
         flatScheduledContents.filter(sc => sc.uuid == updatedContent.scheduledContentUuid)[0]
-      );
+      );       
       if (index > -1) {
         Vue.set(flatScheduledContents[index], "displayContent", updatedContent.displayContent);
       }
@@ -195,7 +196,7 @@ export default new Vuex.Store({
         axios
           .get(this.state.URI + `/resolution/all`, this.state.axiosKeycloakConfig),
         axios
-          .get(this.state.URI + `/NOI-Place/all`, this.state.axiosKeycloakConfig)
+          .get(this.state.URI + `/NOI-Place/all`, this.state.axiosKeycloakConfig),
       ]).then(responses => {
         commit("SET_DISPLAYS", responses[0].data);
         commit("SET_TEMPLATES", responses[1].data);
@@ -380,16 +381,12 @@ export default new Vuex.Store({
     updateScheduledContent({ commit }, data) {
       let URL;
       let postData;
-      if (data.image || !data.templateUuid) {
-        URL = `${this.state.URI}/ScheduledContent/set-new-image/${data.scheduledContentUuid}`;
-        postData = new FormData();
-        postData.append("displayContentDtoJson", JSON.stringify(data.displayContent));
-        postData.append("image", data.image);
-      } else {
-        URL = `${this.state.URI}/ScheduledContent/set-template-image/${data.scheduledContentUuid}?templateUuid=${data.templateUuid}`;
-        postData = data.displayContent;
-      }
-
+      URL = `${this.state.URI}/ScheduledContent/set-new-image/${data.scheduledContentUuid}`;
+      postData = new FormData();
+      postData.append("displayContentDtoJson", JSON.stringify(data.displayContent));
+      postData.append("image", data.image);
+      //URL = `${this.state.URI}/ScheduledContent/set-template-image/${data.scheduledContentUuid}?templateUuid=${data.templateUuid}`;
+      //postData = data.displayContent;
       return axios
         .post(URL, postData, this.state.axiosKeycloakConfig)
         .then(() => {

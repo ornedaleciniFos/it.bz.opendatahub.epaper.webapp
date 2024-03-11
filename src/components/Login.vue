@@ -22,10 +22,10 @@ export default {
     },
   },
   methods: {
-    login() {
+       login() {
       const redirectUri = window.location.origin + this.redirectPath;
       this.$keycloak.login({ redirectUri });
-    },
+      },
   },
 };
 </script>

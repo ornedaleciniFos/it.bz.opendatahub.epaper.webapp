@@ -94,6 +94,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
       </b-col>
 
       <b-col>
+        
         <b-img
           style="
             border: 2px solid black;

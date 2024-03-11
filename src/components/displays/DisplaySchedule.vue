@@ -6,30 +6,19 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <template>
   <div>
-    <DisplayScheduleForm
-      v-if="showAddForm"
-      :editMode="false"
-      :displayUuid="displayUuid"
-      @completed="showAddForm = false"
-    ></DisplayScheduleForm>
-    <DisplayScheduleForm
-      v-else-if="rowToEdit"
-      :initialDescription="rowToEdit.eventDescription"
-      :initialStartDate="rowToEdit.startDate"
-      :initialEndDate="rowToEdit.endDate"
-      :initialImageFields="
-        rowToEdit.displayContent && rowToEdit.displayContent.imageFields
-      "
-      :editMode="true"
-      :eventId="rowToEdit.eventId"
-      :displayUuid="displayUuid"
-      :uuid="rowToEdit.uuid"
-      @completed="onEditFormComplete()"
-    ></DisplayScheduleForm>
-    <div v-else>
-      <b-button variant="success" @click="showAddForm = true" class="mb-2">
+
+    <div>
+      <b-button
+        variant="success"
+        :to="{
+          name: 'Display Schedule Form',
+          params: { displayUuid: displayUuid },
+        }"
+        class="mb-2"
+      >
         Plan new content
       </b-button>
+
       <b-table
         striped
         hover
@@ -69,7 +58,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             @click="row.toggleDetails"
             class="mr-2"
           >
-            {{ row.detailsShowing ? "Hide" : "Show" }}
+            {{ row.detailsShowing ? "Hide" : "Preview" }}
             Details
           </b-button>
           <b-button
@@ -90,7 +79,6 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             {{ row.item.disabled ? "Enable" : "Disable" }}
           </b-button>
           <b-button
-            v-else
             squared
             variant="danger"
             @click="deleteEventClick(row.item)"
@@ -129,11 +117,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 </template>
 
 <script>
-import DisplayScheduleForm from "./DisplayScheduleForm.vue";
 
 export default {
   components: {
-    DisplayScheduleForm,
   },
   data() {
     return {
@@ -177,11 +163,58 @@ export default {
     this.$store.dispatch("loadDisplaySchedule", this.displayUuid);
   },
   methods: {
+    passFunction() {
+      let display = this.$store.state.displays.find(
+        (d) => d.uuid === this.displayUuid,
+      );
+      return display.roomCodes.length == 1;
+    },
     onEditFormComplete() {
       this.rowToEdit = null;
     },
     toggleEditForm(item) {
       this.rowToEdit = item;
+      if (item) {
+        let display = this.$store.state.displays.find(
+          (d) => d.uuid === this.displayUuid,
+        );
+        let formProps={};
+        if (display.roomCodes.length > 1) {
+           formProps = {
+            editMode: true,
+            eventId: item.eventId,
+            initialStartDate: item.startDate,
+            initialEndDate: item.endDate,
+            initialDescription: item.eventDescription,
+            initialTemplate: display.template.uuid,
+            displayUuid: this.displayUuid,
+            uuid: item.uuid,
+            initialOverride: item.override,
+            initialImageFields:
+              item.displayContent && item.displayContent.imageFields,
+              
+          };
+        } else {
+           formProps = {
+            editMode: true,
+            eventId: item.eventId,
+            initialStartDate: item.startDate,
+            initialEndDate: item.endDate,
+            initialDescription: item.eventDescription,
+            initialTemplate: item.templateId,
+            displayUuid: this.displayUuid,
+            uuid: item.uuid,
+            initialOverride: item.override,
+            initialImageFields:
+              item.displayContent && item.displayContent.imageFields,
+          };
+        }
+
+        this.$router.push({
+          name: "Display Schedule Form",
+          params: formProps,
+        });
+      }
     },
     disableEventClick(item) {
       this.$store.dispatch("updateDisplaySchedule", {

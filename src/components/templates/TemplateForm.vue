@@ -20,24 +20,75 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             label="Description"
             placeholder="Enter a description"
           />
-          <b-form-file v-model="image" accept="image/*"></b-form-file>
-          <b-card>
-            <b-card-text>
-              <ImageFields
-                v-model="imageFields"
-                @selectedRowChange="onSelectedRowChange"
-              ></ImageFields>
-            </b-card-text>
-          </b-card>
+          <div id="div3">
+            <div class="flex-container">
+              <div class="left-content">
+                <b-form-select v-model="resolutionUuid" :options="resolutions">
+                  <template v-slot:first>
+                    <b-form-select-option :value="null" disabled
+                      >Select resolution...</b-form-select-option
+                    >
+                  </template>
+                </b-form-select>
+                <b-form-group v-if="multipleRoom" class="border p-1">
+                  <label for="numRooms" class="d-flex align-items-center"
+                    >Rooms:
+                    <b-form-input
+                      v-model="numRooms"
+                      id="numRooms"
+                      type="number"
+                      min="2"
+                      max="6"
+                    ></b-form-input>
+                  </label>
+                </b-form-group>
+              </div>
+              <div class="right-content">
+                <b-card v-if="resolutionUuid">
+                  <label>
+                    <input type="checkbox" v-model="multipleRoom" /> Multiple
+                    Room
+                  </label>
+                  <div v-if="multipleRoom">
+                    <label>
+                      <input type="checkbox" v-model="header" /> Header
+                    </label>
+                    <span style="margin-right: 10px"></span>
+                    <label>
+                      <input type="checkbox" v-model="footer" /> Footer
+                    </label>
+                  </div>
+                </b-card>
+              </div>
+            </div>
+          </div>
+
+          <DisplayDataTemplate
+            :textBoxData="textBoxData"
+            @updateTextBoxData="handleTexBoxData"
+            :indexUp="indexUp"
+            ref="displayDataTemplate"
+            :room="numRooms"
+          />
         </b-card-text>
       </b-card>
-      Template image preview
-      <ImagePreview
-        class="image_preview"
-        :imageSrc="imageSrc"
-        :imageFields="imageFields"
-        :focusedFieldIndex="focusedFieldIndex"
-      ></ImagePreview>
+      <b-card v-if="resolutionUuid" class="imagePrevieww">
+        Template preview
+
+        <ImagePreview
+          @updateTextBoxData="handleTextBoxData"
+          :resolutionUuid="resolutionUuid"
+          :textBoxData="textBoxData"
+          :room="numRooms"
+          :header="header"
+          :footer="footer"
+          :indexUp="indexUp"
+          @updateIndexUp="updateIndexUp"
+          :roomData="roomData"
+          @updateRoomData="updateRoomData"
+          ref="imagePrevieww"
+        />
+      </b-card>
     </div>
     <div>
       <b-button variant="danger" to="/templates" class="mt-2 mr-2">
@@ -52,8 +103,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <script>
 import toastPresets from "@/utils/toastPresets.js";
-import ImageFields from "@/components/displayContent/ImageFields.vue";
 import ImagePreview from "@/components/displayContent/ImagePreview.vue";
+import DisplayDataTemplate from "@/components/displayContent/DisplayDataTemplate.vue";
 
 export default {
   props: {
@@ -62,18 +113,35 @@ export default {
     initialDescription: String,
     initialImageFields: Array,
     templateId: String,
+    initialResolution: Object,
+    initialFooter: Boolean,
+    initialHeader: Boolean,
+    initialMultipleRoom: Boolean,
+    initialRoomData: Array,
+    initialNumRooms: Number,
   },
   components: {
-    ImageFields,
     ImagePreview,
+    DisplayDataTemplate,
   },
   data() {
     return {
       name: this.initialName,
+      resolutionUuid: this.initialResolution
+        ? this.initialResolution.uuid
+        : null,
       description: this.initialDescription,
       image: null,
-      imageFields: this.initialImageFields || [],
-      focusedFieldIndex: null
+      focusedFieldIndex: null,
+      numberInput: 1,
+      isChecked: false,
+      textBoxData: this.initialImageFields || [],
+      multipleRoom: this.initialMultipleRoom || false, 
+      numRooms: 1,
+      header: this.initialHeader || false,
+      footer: this.initialFooter || false,
+      roomData: this.initialRoomData || [],
+      indexUp: null,
     };
   },
   computed: {
@@ -81,29 +149,113 @@ export default {
       return this.editMode ? "Edit template" : "Add template";
     },
     imageSrc() {
+      const resolutionQuery = this.resolutionUuid
+        ? `&resolution=${this.resolutionUuid}`
+        : "";
       return this.editMode && !this.image
         ? `${this.$store.state.URI}/template/get-image/${
             this.templateId
-          }?x=${Date.now()}`
+          }?x=${Date.now()}${resolutionQuery}`
         : this.image;
+    },
+    resolutions() {
+      return this.$store.state.resolutions.map((r) => {
+        return {
+          value: r.uuid,
+          text: `${r.width} x ${r.height} (${r.bitDepth} bit)`,
+        };
+      });
+    },
+    selectedResolution() {
+      return (
+        this.$store.state.resolutions.find(
+          (r) => r.uuid === this.resolutionUuid,
+        ) || {}
+      );
+    },
+  },
+  watch: {
+    textBoxData: {
+      deep: true,
+      handler(val) {
+        this.handleTextBoxData(val);
+      },
+    },
+    multipleRoom: function (newVal) {
+      if (newVal) {
+        this.numRooms = this.numRooms > 1 ? this.numRooms : 2;
+      } else {
+        this.numRooms = 1;
+      }
+    },
+    header: {
+      deep: true,
+      handler() {},
+    },
+    footer: {
+      deep: true,
+      handler() {},
+    },
+    imageFields: {
+      deep: true,
+      handler() {
+        this.refreshImagePrevieww();
+      },
+    },
+    indexUp(newValue) {
+      this.$refs.displayDataTemplate.updateIndexUp(newValue);
     },
   },
 
   methods: {
+    handleTextBoxData(data) {
+      this.textBoxData = data;
+    },
+    updateRoomData(roomData) {
+       this.roomData=roomData;
+    },
+    updateIndexUp(newValue) {
+      this.indexUp = newValue;
+    },
+
+    refreshImagePreview() {
+      this.$refs.imagePreview.refreshImageCanvas();
+    },
+    
     submitTemplate() {
-      const { name, description, imageFields, image, templateId } = this;
+      const {
+        name,
+        description,
+        resolutionUuid,
+        multipleRoom,
+        templateId,
+        textBoxData,
+        footer,
+        header,
+        roomData,
+        numRooms,
+      } = this;
       const templateContent = {
-        image,
         displayContent: {
-          imageFields,
+          imageFields: textBoxData,
+
+          imageBase64: this.$refs.imagePrevieww.saveCanvas(),
         },
         templateUuid: templateId,
       };
+      this.$set(roomData, 0, numRooms);
       const template = {
         name,
         description,
+        resolutionUuid,
+        resolution: this.$store.state.resolutions.find(
+          (r) => r.uuid === resolutionUuid,
+        ),
+        multipleRoom,
+        roomData,
+        header,
+        footer,
       };
-
       let storeOperation;
       if (this.editMode) {
         storeOperation = "updateTemplate";
@@ -124,28 +276,38 @@ export default {
         .catch((err) => {
           this.$bvToast.toast(
             "Failed to save template " + err,
-            toastPresets.errorMessage
+            toastPresets.errorMessage,
           );
         });
     },
-    onSelectedRowChange(index) {
-      this.focusedFieldIndex = index;
-    }
+
   },
 };
 </script>
 
 <style scoped>
+.flex-container {
+  display: flex;
+}
+
+.left-content {
+  flex: 0 0 70%;
+  padding-right: 10px; /* Add some spacing between the left and right content */
+}
+
+.right-content {
+  flex: 0 0 30%;
+}
 .editor {
   overflow: auto;
 }
 .form_card {
-  width: 60%;
+  width: 50%;
   float: left;
   margin-bottom: 5px;
 }
-.image_preview {
-  width: 38%;
+.imagePrevieww {
+  width: 50%;
 }
 
 /* Responsive layout - makes a one column-layout instead of two-column layout */
@@ -153,7 +315,7 @@ export default {
   .form_card {
     width: 100%;
   }
-  .image_preview {
+  .imagePrevieww {
     width: 100%;
   }
 }

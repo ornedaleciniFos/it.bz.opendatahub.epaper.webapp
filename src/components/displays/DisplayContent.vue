@@ -16,6 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           >
             Override content defined in Scheduler
           </b-form-checkbox>
+          
           <b-form-group label="Choose a picture:" class="form_group">
             <b-form-file v-model="image" accept="image/*"></b-form-file>
           </b-form-group>
@@ -45,6 +46,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         :imageSrc="imageSrc"
         :imageFields="imageFields"
         :focusedFieldIndex="focusedFieldIndex"
+        :displayScreen=dis()
       ></ImagePreview>
     </div>
     <div>
@@ -75,12 +77,19 @@ export default {
       selectedTemplateId: null,
       image: null,
       imageFields: this.initialImageFields || [],
-      focusedFieldIndex: null,
+      focusedFieldIndex: null,  
+      
     };
   },
   computed: {
     templates() {
       return this.$store.state.templates;
+    }, 
+    displays() {
+      return this.$store.state.displays;
+    },
+    resolutions() {
+      return this.$store.state.resolutions;
     },
     imageSrc() {
       if (this.image) {
@@ -100,15 +109,16 @@ export default {
   methods: {
     submitDisplayContent() {
       const { selectedTemplateId, imageFields, image, displayUuid } = this;
+      alert("coming gere");
       const data = {
         image,
         displayUuid,
         templateUuid: selectedTemplateId,
-        displayContent: {
+        displayContent: { //image upload 
           imageFields,
         },
       };
-
+      alert(JSON.stringify(data,null,2));
       this.$store
         .dispatch("updateDisplayContent", data)
         .then(() => {
@@ -123,6 +133,11 @@ export default {
             toastPresets.errorMessage
           );
         });
+    },
+    dis(){
+      let display = this.displays.find((d) => d.uuid === this.displayUuid);
+      //let resolution= this.resolution.find((r) => r.uuid === this.display.resolution_id)
+      return display.resolution;
     },
     onSelectedTemplateChange(value) {
       this.image = null;
