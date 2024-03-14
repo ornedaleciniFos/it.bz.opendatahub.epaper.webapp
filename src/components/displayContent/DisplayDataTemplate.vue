@@ -165,8 +165,8 @@ export default {
         this.updateTextData();
         
       }
-     this.$emit("boxes",this.textBoxData);
-      this.$emit("updateTextBoxData", this.textBoxData);
+      //this.$emit("boxes",this.textBoxData);
+     // this.$emit("updateTextBoxData", this.textBoxData);
       this.$emit("textBoxData", this.textBoxData);
     },
   },
@@ -190,7 +190,7 @@ export default {
   background-color: #f2f2f2;
 }
 .small-input {
-  width: 50px; 
+  width: 70px; 
 }
 .active-row {
   background-color: #808080;
