@@ -6,75 +6,74 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <template>
   <div class="canvas-container">
-    <button @click.prevent="addNewBox">Add Text Area</button>
-    <label for="fileInput" class="upload-button">Upload Image</label>
-    <div class="canvas-border">
-      <input
-        type="file"
-        id="fileInput"
-        @change="handleImageUpload"
-        accept="image/*"
-        style="display: none"
-      />
-      <canvas
-        class="image_canvas"
-        :id="canvasid"
-        ref="canvasRef"
-        :width="canvasWidth * 0.6 + 'px'"
-        :height="canvasHeight * 0.6 + 'px'"
-      ></canvas>
-      <div
-        v-for="(box, index) in boxes"
-        :key="index"
-        class="draggable-box"
-        :style="{
-          top: box.yPos + 'px',
-          left: box.xPos + 'px',
-          width: box.width + 'px',
-          height: box.height + 'px',
-          border: box.border ? '2px solid #000' : 'none', // Conditional border style
-        }"
-        @mousedown="startDrag(index, $event)"
-      >
-        <div class="content-container">
-          <div class="image-container" v-if="box.image">
-            <img
-              :src="box.image"
-              alt="Uploaded Image"
-              class="resizable-image"
-              :style="{ width: box.width + 'px', height: box.height + 'px' }"
-            />
+    <div class="canvas-wrapper">
+      <button @click.prevent="addNewBox">Add Text Area</button>
+      <label for="fileInput" class="upload-button">Upload Image</label>
+      <div class="canvas-border">
+        <input
+          type="file"
+          id="fileInput"
+          @change="handleImageUpload"
+          accept="image/*"
+          style="display: none"
+        />
+        <canvas
+          class="image_canvas"
+          :id="canvasid"
+          ref="canvasRef"
+          :width="canvasWidth + 'px'"
+          :height="canvasHeight + 'px'"
+        ></canvas>
+        <div
+          v-for="(box, index) in boxes"
+          :key="index"
+          class="draggable-box"
+          :style="{
+            top: box.yPos + 'px',
+            left: box.xPos + 'px',
+            width: box.width + 'px',
+            height: box.height + 'px',
+            border: box.border ? '2px solid #000' : 'none', // Conditional border style
+          }"
+          @mousedown="startDrag(index, $event)"
+        >
+          <div class="content-container">
+            <div class="image-container" v-if="box.image">
+              <img
+                :src="box.image"
+                alt="Uploaded Image"
+                class="resizable-image"
+                :style="{ width: box.width + 'px', height: box.height + 'px' }"
+              />
+              <div
+                v-if="!isResizing || (isResizing && resizeType === 'image')"
+                class="resize-handle"
+                @mousedown="startResize(index, $event, 'image')"
+              ></div>
+            </div>
+            <textarea
+              v-model="box.customText"
+              @input="updateBoxDimensions(index)"
+              class="resizable-textarea"
+              :style="{
+                width: box.width + 'px',
+                height: box.height + 'px',
+                xPos: box.xPos + 'px',
+                yPos: box.yPos + 'px',
+                fontStyle: box.italic ? 'italic' : 'normal',
+                fontWeight: box.bold ? 'bold' : 'normal',
+                fontSize: box.fontSize + 'px', // Add this line for fontSize
+                border: box.border ? '2px solid #000' : 'dashed',
+              }"
+              style="overflow: hidden"
+            ></textarea>
+
             <div
-              v-if="!isResizing || (isResizing && resizeType === 'image')"
+              v-if="!isResizing || (isResizing && resizeType === 'text')"
               class="resize-handle"
-              @mousedown="startResize(index, $event, 'image')"
+              @mousedown="startResize(index, $event, 'text')"
             ></div>
           </div>
-          <textarea
-            v-model="box.customText"
-            @input="updateBoxDimensions(index)"
-            class="resizable-textarea"
-            :style="{
-              width: box.width + 'px',
-              height: box.height + 'px',
-              xPos: box.xPos + 'px',
-              yPos: box.yPos + 'px',
-              fontStyle: box.italic ? 'italic' : 'normal',
-              fontWeight: box.bold ? 'bold' : 'normal',
-              fontSize: box.fontSize + 'px', // Add this line for fontSize
-              border: box.border ? '2px solid #000' : 'dashed',
-            }"
-            style="overflow: hidden"
-            @keydown.enter.exact.prevent="handleNewLine"
-            @keydown.enter.meta.exact.prevent
-            @keydown.enter.ctrl.exact.prevent
-          ></textarea>
-
-          <div
-            v-if="!isResizing || (isResizing && resizeType === 'text')"
-            class="resize-handle"
-            @mousedown="startResize(index, $event, 'text')"
-          ></div>
         </div>
       </div>
     </div>
@@ -119,8 +118,8 @@ export default {
     },
   },
   mounted() {
-    const scaledWidth = this.canvasWidth * 0.6;
-    const scaledHeight = this.canvasHeight * 0.6;
+    const scaledWidth = this.canvasWidth;
+    const scaledHeight = this.canvasHeight;
     const canvas = this.$refs.canvasRef;
     canvas.width = scaledWidth;
     canvas.height = scaledHeight;
@@ -162,10 +161,10 @@ export default {
       },
       deep: true,
     },
-    updateCanvasBorderSize: {
+    /*  updateCanvasBorderSize: {
       handler() {},
       deep: true,
-    },
+    },*/
   },
   methods: {
     updateIndexUp() {
@@ -175,7 +174,7 @@ export default {
     saveCanvas() {
       const canvas = this.$refs.canvasRef;
       const ctx = canvas.getContext("2d");
-
+      
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -193,7 +192,7 @@ export default {
           // Draw a rectangle for text boxes with white background and border
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(box.xPos, box.yPos, box.width, box.height);
-
+          alert(JSON.stringify(box, null, 2));
           // Draw text in black with styles
           ctx.fillStyle = "#000000";
           ctx.font = `${box.italic ? "italic" : ""} ${box.bold ? "bold" : ""} ${box.fontSize}px sans-serif`;
@@ -668,6 +667,21 @@ textarea {
   border: 2px solid #000;
   overflow: hidden;
   margin: 0px;
+}
+.canvas-wrapper {
+  width: 100%; /* Set to the desired width */
+  height: 100%; /* Set to the desired height */
+  overflow: hidden; /* Prevent content from overflowing */
+}
+.image_canvas {
+  display: block;
+  margin: auto; /* Center the canvas horizontally and vertically */
+}
+.canvas-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%; /* Set to the desired height */
 }
 
 .upload-button {
