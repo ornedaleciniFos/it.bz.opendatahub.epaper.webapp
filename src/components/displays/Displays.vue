@@ -55,12 +55,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <script>
 import DisplayInformation from "./DisplayInformation.vue";
-import DisplaySchedule from "./DisplaySchedule.vue";
+// import DisplaySchedule from "./DisplaySchedule.vue";
 
 export default {
   components: {
     DisplayInformation,
-    DisplaySchedule,
+    // DisplaySchedule,
   },
   props: {
     // --- These props are used in QR code link ---
@@ -68,8 +68,7 @@ export default {
     screenWidth: Number,
     screenHeight: Number,
     screenBitDepth: Number,
-    
-    
+
     // ---
   },
   data() {
@@ -82,23 +81,26 @@ export default {
         { key: "last_state", sortable: false }, // Cannot set "sortKey" for date sorting, need to update bootstrap-vue
         { key: "show_details", sortable: false },
       ],
-     
     };
   },
   computed: {
-	displays() {
+    displays() {
       return this.$store.state.displays;
     },
     formatDisplayRows() {
       if (!this.displays) return [];
       return this.displays.map((item) => {
-          let rooms = [];
+        let rooms = [];
+        if (item.roomCodes) {
           for (let code of item.roomCodes) {
-            let room = this.$store.state.rooms.find((room) => room.code === code);
+            let room = this.$store.state.rooms.find(
+              (room) => room.code === code
+            );
             if (room) {
               rooms.push(room.name);
             }
           }
+        }
         rooms = rooms.length > 0 ? rooms.join(", ") : "No room assigned";
         item.rooms = rooms;
         item.lastState = item.lastState && new Date(item.lastState);
@@ -133,7 +135,7 @@ export default {
   },
   mounted() {
     //Check if we received display id via props
-    
+
     if (this.displayId) {
       let display = this.displays.find((d) => d.uuid === this.displayId);
       if (display) {
@@ -159,7 +161,7 @@ export default {
     }
   },
   methods: {
-	setIgnoreSchedule(displayUuid, ignoreFlag) {
+    setIgnoreSchedule(displayUuid, ignoreFlag) {
       let display = this.displays.find((d) => d.uuid === displayUuid);
       if (display) {
         display.ignoreScheduledContent = ignoreFlag;
@@ -179,21 +181,24 @@ export default {
   text-align: center;
 }
 /* Custom column width for each field */
-.b-table th:nth-child(1), .b-table td:nth-child(1) {
+.b-table th:nth-child(1),
+.b-table td:nth-child(1) {
   width: 20%; /* Adjust the width as needed */
 }
-.b-table th:nth-child(2), .b-table td:nth-child(2) {
+.b-table th:nth-child(2),
+.b-table td:nth-child(2) {
   width: 20%; /* Adjust the width as needed */
 }
-.b-table th:nth-child(3), .b-table td:nth-child(3) {
+.b-table th:nth-child(3),
+.b-table td:nth-child(3) {
   width: 20%; /* Adjust the width as needed */
 }
-.b-table th:nth-child(4), .b-table td:nth-child(4) {
+.b-table th:nth-child(4),
+.b-table td:nth-child(4) {
   width: 20%; /* Adjust the width as needed */
 }
-.b-table th:nth-child(5), .b-table td:nth-child(5) {
+.b-table th:nth-child(5),
+.b-table td:nth-child(5) {
   width: 20%; /* Adjust the width as needed */
 }
-
-
 </style>
