@@ -1,9 +1,3 @@
-<!--
-SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
-
-SPDX-License-Identifier: AGPL-3.0-or-later
--->
-
 <template>
   <div>
     <h5>Text Box Data</h5>
@@ -167,13 +161,13 @@ export default {
     deleteTextBox(index) {
       if (confirm("Are you sure you want to delete this text box?")) {
         this.textBoxData.splice(index, 1);
-        this.boxes.splice(index, 1);
+        //this.boxes.splice(index, 1);
         this.updateTextData();
         
       }
       //this.$emit("boxes",this.textBoxData);
      // this.$emit("updateTextBoxData", this.textBoxData);
-      this.$emit("textBoxData", this.textBoxData);
+      //this.$emit("textBoxData", this.textBoxData);
     },
   },
 };

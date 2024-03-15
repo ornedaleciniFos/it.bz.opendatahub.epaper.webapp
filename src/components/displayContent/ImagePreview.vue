@@ -1,9 +1,3 @@
-<!--
-SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
-
-SPDX-License-Identifier: AGPL-3.0-or-later
--->
-
 <template>
   <div class="canvas-container">
     <div class="canvas-wrapper">
@@ -192,7 +186,6 @@ export default {
           // Draw a rectangle for text boxes with white background and border
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(box.xPos, box.yPos, box.width, box.height);
-          alert(JSON.stringify(box, null, 2));
           // Draw text in black with styles
           ctx.fillStyle = "#000000";
           ctx.font = `${box.italic ? "italic" : ""} ${box.bold ? "bold" : ""} ${box.fontSize}px sans-serif`;
@@ -340,9 +333,9 @@ export default {
             this.printTextBoxData();
           }
         }
-        this.$emit("updateTextBoxData", this.textBoxData);
-        this.$emit("boxes", this.textBoxData);
-        this.$emit("textBoxData", this.textBoxData);
+       // this.$emit("updateTextBoxData", this.textBoxData);
+        //this.$emit("boxes", this.textBoxData);
+        //this.$emit("textBoxData", this.textBoxData);
       });
 
       this.boxes = textBoxData;
