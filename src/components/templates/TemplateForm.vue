@@ -65,7 +65,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
           <DisplayDataTemplate
             :textBoxData="textBoxData"
-            @updateTextBoxData="handleTexBoxData"
+            @updateTextBoxData="handleTextBoxData"
             :indexUp="indexUp"
             ref="displayDataTemplate"
             :room="numRooms"
