@@ -1,9 +1,3 @@
-<!--
-SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
-
-SPDX-License-Identifier: AGPL-3.0-or-later
--->
-
 <template>
   <div class="canvas-container">
     <button @click.prevent="addNewBox">Add Text Area</button>
@@ -337,9 +331,9 @@ export default {
             this.printTextBoxData();
           }
         }
-        this.$emit("updateTextBoxData", this.textBoxData);
+        /*this.$emit("updateTextBoxData", this.textBoxData);
         this.$emit("boxes", this.textBoxData);
-        this.$emit("textBoxData", this.textBoxData);
+        this.$emit("textBoxData", this.textBoxData);*/
       });
 
       this.boxes = textBoxData;
