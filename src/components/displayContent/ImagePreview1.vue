@@ -85,10 +85,11 @@ export default {
   props: {
     textBoxData: Array,
     resolutionUuid: String,
-    room: Number,
+    //room: Number,
+    selectedRoomIndex: Number,
     header: Boolean,
     footer: Boolean,
-    indexUp: Number,
+    //indexUp: Number,
   },
   data() {
     return {
@@ -110,6 +111,8 @@ export default {
       roomData: [],
       indexes: [],
       previewImageUrl: "",
+      indexUp: 0,
+      room:1
     };
   },
   computed: {
@@ -124,13 +127,20 @@ export default {
     const canvas = this.$refs.canvasRef;
     canvas.width = scaledWidth;
     canvas.height = scaledHeight;
+    if (typeof this.$props.room === 'undefined') {
+        this.room = 0; // Set a default value if the prop is undefined
+      } else {
+        this.room = this.$props.room; // Use the prop value
+      }
     this.getResolution();
     this.updateCanvasBorderSize();
   },
   watch: {
     textBoxData: {
-      handler(newTextBoxData) {
-        this.updateTextAreas(newTextBoxData);
+      handler(newTextBoxData, oldTextBoxData) {
+        if (JSON.stringify(newTextBoxData) !== JSON.stringify(oldTextBoxData)) {
+          this.updateTextAreas(newTextBoxData);
+        }
       },
       deep: true,
     },
@@ -164,10 +174,9 @@ export default {
     },
   },
   methods: {
-    updateIndexUp() {
-      this.$emit("updateIndexUp", this.indexUp);
+    updateIndexUp(newValue) {
+      this.indexUp = newValue;
     },
-
     saveCanvas() {
       const canvas = this.$refs.canvasRef;
       const ctx = canvas.getContext("2d");
@@ -337,9 +346,9 @@ export default {
             this.printTextBoxData();
           }
         }
-        /*this.$emit("updateTextBoxData", this.textBoxData);
+        this.$emit("updateTextBoxData", this.boxes);
         this.$emit("boxes", this.textBoxData);
-        this.$emit("textBoxData", this.textBoxData);*/
+        this.$emit("textBoxData", this.textBoxData)
       });
 
       this.boxes = textBoxData;
@@ -401,7 +410,6 @@ export default {
         ctx.lineTo(canvas.width, redLineYBottom);
         ctx.stroke();
       }
-
       if (this.header && this.footer) {
         lineHeight =
           (canvas.height - marginBottom - marginTop) / (numLines + 1);
@@ -427,7 +435,7 @@ export default {
         this.roomData[0] = this.room;
         this.$set(this.roomData, 0, this.room);
       }
-      if (canvas.height * 2 == 5120 && canvas.width * 2 == 1440) {
+      if (canvas.height == 5120 && canvas.width == 1440) {
         ctx.strokeStyle = "black";
         ctx.lineWidth = 10;
         ctx.lineCap = "round";

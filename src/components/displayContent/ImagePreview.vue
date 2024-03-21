@@ -84,10 +84,10 @@ export default {
   props: {
     textBoxData: Array,
     resolutionUuid: String,
-    room: Number,
+    //room: Number,
     header: Boolean,
     footer: Boolean,
-    indexUp: Number,
+    //indexUp: Number,
   },
   data() {
     return {
@@ -109,6 +109,8 @@ export default {
       roomData: [],
       indexes: [],
       previewImageUrl: "",
+      indexUp: 0,
+      room:0,
     };
   },
   computed: {
@@ -123,13 +125,20 @@ export default {
     const canvas = this.$refs.canvasRef;
     canvas.width = scaledWidth;
     canvas.height = scaledHeight;
+    if (typeof this.$props.room === 'undefined') {
+        this.room = 1; // Set a default value if the prop is undefined
+      } else {
+        this.room = this.$props.room; // Use the prop value
+      }
     this.getResolution();
     this.updateCanvasBorderSize();
   },
   watch: {
     textBoxData: {
-      handler(newTextBoxData) {
-        this.updateTextAreas(newTextBoxData);
+      handler(newTextBoxData, oldTextBoxData) {
+        if (JSON.stringify(newTextBoxData) !== JSON.stringify(oldTextBoxData)) {
+          this.updateTextAreas(newTextBoxData);
+        }
       },
       deep: true,
     },
@@ -167,14 +176,13 @@ export default {
     },*/
   },
   methods: {
-    updateIndexUp() {
-      this.$emit("updateIndexUp", this.indexUp);
+    updateIndexUp(newValue) {
+      this.indexUp = newValue;
     },
-
     saveCanvas() {
       const canvas = this.$refs.canvasRef;
       const ctx = canvas.getContext("2d");
-      
+
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -315,7 +323,6 @@ export default {
 
           this.boxes[index].created = data.created;
           this.boxes[index].lastUpdate = new Date();
-
           if (this.indexes.includes(index) && data.repeat == false) {
             this.indexes.splice(index, 1);
           } else if (
@@ -324,7 +331,7 @@ export default {
           ) {
             this.indexes.push(index);
             let varY = data.yPos + this.roomData[2];
-            for (let i = 0; i < this.room - 1; i++) {
+            for (let i = 0; i < this.roomData[0]-1 ; i++) {
               const newBox = {
                 ...data,
                 field: data.field,
@@ -334,17 +341,19 @@ export default {
               };
               varY += this.roomData[2];
               this.boxes.push(newBox);
-            }
+              
+            }this.printTextBoxData();
 
-            this.printTextBoxData();
+            
           }
         }
-       // this.$emit("updateTextBoxData", this.textBoxData);
-        //this.$emit("boxes", this.textBoxData);
-        //this.$emit("textBoxData", this.textBoxData);
+        //alert(JSON.stringify(textBoxData, null, 2));
+        this.$emit("updateTextBoxData", this.boxes);
+       this.$emit("boxes", this.boxes);
+       this.$emit("textBoxData", this.boxes);
       });
 
-      this.boxes = textBoxData;
+     // this.boxes = textBoxData;
     },
     handleNewLine() {
       //event.target.value += '\n';
@@ -422,14 +431,14 @@ export default {
         this.roomData[2] = lineHeight;
         this.$set(this.roomData, 2, lineHeight);
       }
-      if (this.room[0] == 0) {
+     /* if (this.room[0] == 0) {
         this.roomData[0] = 1;
         this.$set(this.roomData, 0, 1);
       } else {
         this.roomData[0] = this.room;
         this.$set(this.roomData, 0, this.room);
-      }
-      if (canvas.height * 2 == 5120 && canvas.width * 2 == 1440) {
+      }*/
+      if (canvas.height  == 5120 && canvas.width  == 1440) {
         ctx.strokeStyle = "black";
         ctx.lineWidth = 10;
         ctx.lineCap = "round";
@@ -441,7 +450,7 @@ export default {
         ctx.lineCap = "butt";
       }
       this.$emit("updateRoomData", this.roomData);
-      if (this.roomData[0] != 1) {
+      if (this.roomData[0] > 1) {
         ctx.strokeStyle = "gray";
         ctx.setLineDash([5, 5]);
         for (let i = 1; i <= numLines; i++) {
@@ -666,7 +675,9 @@ textarea {
   border: 2px solid #000;
   overflow: hidden;
   margin: 0px;
+ 
 }
+
 .canvas-wrapper {
   width: 100%; /* Set to the desired width */
   height: 100%; /* Set to the desired height */
