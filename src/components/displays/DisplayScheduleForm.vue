@@ -84,12 +84,11 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <div>
               <DisplayDataTemplate1
                 :textBoxData="textBoxData"
-                @updateTextBoxData="handleTexBoxData"
+                @updateTextBoxData="handleTextBoxData"
                 :roomTextBoxData="roomTextBoxData"
                 @handleRoomData="handleRoomData"
                 :indexUp="indexUp"
                 ref="displayDataTemplate"
-                :room="numRooms"
                 :selectedRoomIndex="selectedRoomIndex"
                 :templateId="selectedTemplateId"
               />
@@ -101,10 +100,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <div>
               <DisplayDataTemplate
                 :textBoxData="textBoxData"
-                @updateTextBoxData="handleTexBoxData"
+                @updateTextBoxData="handleTextBoxData"
                 :indexUp="indexUp"
                 ref="displayDataTemplate"
-                :room="numRooms"
               />
             </div>
           </b-card-text>
@@ -116,9 +114,6 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           @updateTextBoxData="handleTextBoxData"
           :resolutionUuid="resolutionUuid"
           :textBoxData="textBoxData"
-          :room="numRooms"
-          :header="header"
-          :footer="footer"
           :indexUp="indexUp"
           @updateIndexUp="updateIndexUp"
           :roomData="roomData"
@@ -133,9 +128,6 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           @updateTextBoxData="handleTextBoxData"
           :resolutionUuid="resolutionUuid"
           :textBoxData="textBoxData"
-          :room="numRooms"
-          :header="header"
-          :footer="footer"
           :indexUp="indexUp"
           @updateIndexUp="updateIndexUp"
           :roomData="roomData"
@@ -181,7 +173,7 @@ export default {
     uuid: String,
     initialImageFields: Array,
     initialOverride: Boolean,
-    initialTemplate: Object,
+    initialTemplate: String,
   },
   components: {
     ImagePreview,
@@ -198,8 +190,7 @@ export default {
     },
     roomTextBoxData: {
       deep: true,
-      handler(val) {
-        this.roomTextBoxData(val);
+      handler() {
       },
     },
     imageFields: {
@@ -208,24 +199,29 @@ export default {
         this.refreshImagePreview();
       },
     },
-    indexUp(newValue) {
-      this.$refs.displayDataTemplate.updateIndexUp(newValue);
+    indexUp: {
+      deep: true,
+      handler() {},
     },
   },
   mounted() {
     let display = this.$store.state.displays.find(
       (d) => d.uuid === this.displayUuid,
     );
-    let template = this.$store.state.templates.find(
-      (t) => t.uuid === display.template.uuid,
-    );
-    if (template) {
-      this.selectedTemplateId = template.uuid;
-      this.onSelectedRoomChange();
+
+    // Perform null check before accessing nested properties
+    if (display && display.template) {
+      let template = this.$store.state.templates.find(
+        (t) => t.uuid === display.template.uuid,
+      );
       if (template) {
-        this.header = template.header;
-        this.footer = template.footer;
-        this.roomData = template.roomData;
+        this.selectedTemplateId = template.uuid;
+        this.onSelectedRoomChange();
+        if (template) {
+          this.header = template.header;
+          this.footer = template.footer;
+          this.roomData = template.roomData;
+        }
       }
     }
   },
@@ -245,6 +241,8 @@ export default {
       selectedRoom: null,
       selectedRoomIndex: null,
       roomTextBoxData: [],
+      indexUp: null,
+      roomData: [],
     };
   },
   computed: {
@@ -334,7 +332,7 @@ export default {
     },
 
     refreshImagePreview() {
-     this.$refs.imagePreview1.refreshImageCanvas();
+      this.$refs.imagePreview1.refreshImageCanvas();
       this.$refs.imagePrevieww.refreshImageCanvas();
     },
     submitSchedule() {
@@ -368,6 +366,8 @@ export default {
           },
         };
       }
+
+     
       let roomCodef = this.$store.state.rooms.find(
         (r) => r.name === this.selectedRoom,
       );
@@ -380,9 +380,9 @@ export default {
         uuid,
         override,
       };
-        if(roomCodef!=null){
-          data.room= roomCodef.code;
-        }
+      if (roomCodef != null) {
+        data.room = roomCodef.code;
+      }
       data.startDate.setHours(parseInt(this.startTime.substring(0, 2)));
       data.startDate.setMinutes(parseInt(this.startTime.substring(3, 5)));
 
@@ -396,7 +396,6 @@ export default {
       } else {
         storeOperation = "createDisplaySchedule";
       }
-
       this.$store
         .dispatch(storeOperation, data)
         .then((data) => {

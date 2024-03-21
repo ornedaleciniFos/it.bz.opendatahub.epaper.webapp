@@ -163,12 +163,7 @@ export default {
     this.$store.dispatch("loadDisplaySchedule", this.displayUuid);
   },
   methods: {
-    passFunction() {
-      let display = this.$store.state.displays.find(
-        (d) => d.uuid === this.displayUuid,
-      );
-      return display.roomCodes.length == 1;
-    },
+    
     onEditFormComplete() {
       this.rowToEdit = null;
     },

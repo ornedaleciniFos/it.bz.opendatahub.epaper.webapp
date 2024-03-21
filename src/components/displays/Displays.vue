@@ -55,12 +55,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <script>
 import DisplayInformation from "./DisplayInformation.vue";
-// import DisplaySchedule from "./DisplaySchedule.vue";
+import DisplaySchedule from "./DisplaySchedule.vue";
 
 export default {
   components: {
     DisplayInformation,
-    // DisplaySchedule,
+    DisplaySchedule,
   },
   props: {
     // --- These props are used in QR code link ---
