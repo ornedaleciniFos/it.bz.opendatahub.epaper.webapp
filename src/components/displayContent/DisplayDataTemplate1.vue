@@ -165,8 +165,9 @@ export default {
       deep: true, // Watch changes deeply in the array
     },
     selectedRoomIndex: {
-      handler() {
-        this.filteredTextBoxData();
+      handler(val) {
+        this.$emit("selectedRoomIndex", val);
+        this.filteredTextBoxData;
       },
       deep: true,
     },
@@ -185,7 +186,7 @@ export default {
       }
       this.$emit("boxes", this.textBoxData);
       this.$emit("updateTextBoxData", this.textBoxData);
-      //this.$emit("textBoxData", this.textBoxData);
+      this.$emit("textBoxData", this.textBoxData);
     },
     isEditable(index) {
       const template = this.$store.state.templates.find(

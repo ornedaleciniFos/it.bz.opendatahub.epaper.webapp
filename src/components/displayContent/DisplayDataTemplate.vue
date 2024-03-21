@@ -142,7 +142,6 @@ export default {
   },
   computed: {
     filteredTextBoxData() {
-      
       return this.textBoxData;
     },
   },
@@ -161,13 +160,13 @@ export default {
     deleteTextBox(index) {
       if (confirm("Are you sure you want to delete this text box?")) {
         this.textBoxData.splice(index, 1);
-        //this.boxes.splice(index, 1);
+       //this.boxes.splice(index, 1);
         this.updateTextData();
         
       }
-      //this.$emit("boxes",this.textBoxData);
-     // this.$emit("updateTextBoxData", this.textBoxData);
-      //this.$emit("textBoxData", this.textBoxData);
+       this.$emit("boxes",this.textBoxData);
+       this.$emit("updateTextBoxData", this.textBoxData);
+       this.$emit("textBoxData", this.textBoxData);
     },
   },
 };
