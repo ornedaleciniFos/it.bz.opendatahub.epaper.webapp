@@ -37,8 +37,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
                       v-model="numRooms"
                       id="numRooms"
                       type="number"
-                      min="2"
-                      max="6"
+                      min=2
+                      max=6
                     ></b-form-input>
                   </label>
                 </b-form-group>
@@ -68,7 +68,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             @updateTextBoxData="handleTextBoxData"
             :indexUp="indexUp"
             ref="displayDataTemplate"
-            :room="numRooms"
+            :room="parseInt(numRooms)"
           />
         </b-card-text>
       </b-card>
@@ -79,7 +79,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           @updateTextBoxData="handleTextBoxData"
           :resolutionUuid="resolutionUuid"
           :textBoxData="textBoxData"
-          :room="numRooms"
+          :room="parseInt(numRooms)"
           :header="header"
           :footer="footer"
           :indexUp="indexUp"
@@ -118,7 +118,6 @@ export default {
     initialHeader: Boolean,
     initialMultipleRoom: Boolean,
     initialRoomData: Array,
-    initialNumRooms: Number,
   },
   components: {
     ImagePreview,
@@ -136,12 +135,13 @@ export default {
       numberInput: 1,
       isChecked: false,
       textBoxData: this.initialImageFields || [],
-      multipleRoom: this.initialMultipleRoom || false, 
-      numRooms: 1,
+      multipleRoom: this.initialMultipleRoom || false,
+      numRooms:  1,
       header: this.initialHeader || false,
       footer: this.initialFooter || false,
       roomData: this.initialRoomData || [],
       indexUp: null,
+      room:1,
     };
   },
   computed: {
@@ -184,6 +184,7 @@ export default {
     multipleRoom: function (newVal) {
       if (newVal) {
         this.numRooms = this.numRooms > 1 ? this.numRooms : 2;
+        this.$set(this.roomData, 0, this.numRooms);
       } else {
         this.numRooms = 1;
       }
@@ -196,15 +197,23 @@ export default {
       deep: true,
       handler() {},
     },
+    
     imageFields: {
       deep: true,
       handler() {
         this.refreshImagePrevieww();
       },
     },
-    indexUp(newValue) {
-      this.$refs.displayDataTemplate.updateIndexUp(newValue);
+    indexUp: {
+      deep: true,
+      handler() {},
     },
+    numRooms: {
+        deep: true,
+        handler(val) {
+          this.$set(this.roomData, 0, val);
+        },
+      },
   },
 
   methods: {
@@ -212,7 +221,7 @@ export default {
       this.textBoxData = data;
     },
     updateRoomData(roomData) {
-       this.roomData=roomData;
+      this.roomData = roomData;
     },
     updateIndexUp(newValue) {
       this.indexUp = newValue;
@@ -221,7 +230,7 @@ export default {
     refreshImagePreview() {
       this.$refs.imagePreview.refreshImageCanvas();
     },
-    
+
     submitTemplate() {
       const {
         name,
@@ -280,7 +289,6 @@ export default {
           );
         });
     },
-
   },
 };
 </script>
