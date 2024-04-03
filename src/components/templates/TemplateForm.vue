@@ -7,7 +7,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 <template>
   <b-form @submit.prevent="submitTemplate">
     <div class="editor">
+    
       <b-card :title="pageTitle" class="form_card">
+  
         <b-card-text>
           <b-form-input
             v-model="name"
@@ -72,6 +74,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           />
         </b-card-text>
       </b-card>
+      
       <b-card v-if="resolutionUuid" class="imagePrevieww">
         Template preview
 
@@ -80,6 +83,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           :resolutionUuid="resolutionUuid"
           :textBoxData="textBoxData"
           :room="parseInt(numRooms)"
+          :multipleRoom="multipleRoom"
           :header="header"
           :footer="footer"
           :indexUp="indexUp"
@@ -117,7 +121,10 @@ export default {
     initialFooter: Boolean,
     initialHeader: Boolean,
     initialMultipleRoom: Boolean,
-    initialRoomData: Array,
+    initialRoomData: {
+        type: Array,
+        default: () => [] // Set a default empty array if initialRoomData is not provided
+      },
   },
   components: {
     ImagePreview,
@@ -136,7 +143,7 @@ export default {
       isChecked: false,
       textBoxData: this.initialImageFields || [],
       multipleRoom: this.initialMultipleRoom || false,
-      numRooms:  1,
+      numRooms: this.initialRoomData[0]|| 1,
       header: this.initialHeader || false,
       footer: this.initialFooter || false,
       roomData: this.initialRoomData || [],

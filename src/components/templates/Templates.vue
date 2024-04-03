@@ -9,6 +9,19 @@ SPDX-License-Identifier: AGPL-3.0-or-later
     <b-button variant="success" to="/template-form" class="mb-2">
       Add template
     </b-button>
+    <b-button variant="secondary" id="info-button" class="mb-2 ml-1" >
+      Info
+    </b-button>
+    <b-popover target="info-button" triggers="hover">
+      <template #title>Information about templates</template>
+      <template #default>
+        The "Add new template" button allows you to add a new template. You can add a new template, by inserting a name, description and resolution.<br> 
+        The "Preview details" button previews the template image<br>
+        The "Edit" button allows modification of the template.<br>
+        The "Delete"" button deletes the template.
+      </template>
+    </b-popover>
+    
     <b-table
       striped
       hover
@@ -31,9 +44,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
       <template v-slot:cell(options)="row">
         <b-button
           squared
-          variant="info"
           @click="row.toggleDetails"
-          class="mr-2"
+          class="mr-2 show_details"
         >
           {{ row.detailsShowing ? "Hide" : "Preview" }} content
         </b-button>
@@ -105,7 +117,7 @@ export default {
           initialMultipleRoom: template.multipleRoom,
           initialFooter: template.footer,
           initialHeader:template.header,
-          initialRoomData: template.roomData,
+          initialRoomData: template.roomData||[],
           initialNumRooms: template.roomData[0]||1,
         };
         this.$router.push({ name: "Template Form", params: formProps });
@@ -129,3 +141,13 @@ export default {
   },
 };
 </script>
+<style scoped>
+.show_details {
+  background-color: #1B5E20;
+  color: white;
+  font-weight: bold;
+}
+.show_details:hover {
+  background-color: #43A047; /* Change background color on hover */
+}
+</style>
