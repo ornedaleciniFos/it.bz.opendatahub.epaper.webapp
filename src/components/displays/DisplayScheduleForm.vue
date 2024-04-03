@@ -423,7 +423,9 @@ export default {
           ...(template.displayContent &&
             template.displayContent.imageFields.map((f) => ({ ...f }))),
         ];
+        this.handleTextBoxData(this.textBoxData);
         this.$emit("updateTextBoxData", this.textBoxData);
+      //  this.$emit("textBoxData", this.textBoxData);
       }
     },
     onSelectedRoomChange() {

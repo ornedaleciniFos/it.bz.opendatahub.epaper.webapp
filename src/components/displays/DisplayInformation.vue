@@ -22,13 +22,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             bit)
           </b-col>
         </b-row>
-        <b-row v-if="display.location">
-          <b-col> Location name: {{ display.location.name }} </b-col>
-        </b-row>
-        <b-row v-if="display.location && display.location.description">
-          <b-col>
-            Location description: {{ display.location.description }}
-          </b-col>
+        <b-row v-if="display.roomCodes">
+          <b-col> Location: {{ formatRooms.join(', ') }} </b-col>
         </b-row>
         <b-row>
           <b-col :class="batteryLevelClass">
@@ -129,6 +124,19 @@ export default {
       }
       return null;
     },
+    formatRooms(){
+    let rooms=[];
+	for (let code of this.display.roomCodes) {
+
+     let room = this.$store.state.rooms.find(
+       (room) => room.code === code
+     );
+     if (room) {
+       rooms.push(room.name);
+     }
+   }
+	return rooms;
+},
   },
   methods: {
     editDisplay(display) {

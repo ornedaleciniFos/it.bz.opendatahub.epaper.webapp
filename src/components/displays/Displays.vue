@@ -9,6 +9,21 @@ SPDX-License-Identifier: AGPL-3.0-or-later
     <b-button variant="success" to="/display-form" class="mb-2">
       Add display
     </b-button>
+     <!-- Info button with popover -->
+    <b-button variant="secondary" id="info-button" class="mb-2 ml-1" >
+      Info
+    </b-button>
+    <b-popover target="info-button" triggers="hover">
+      <template #title>Information about display</template>
+      <template #default>
+        The "Add new display" button allows you to add a new display. You can add a new display, by adding id, name, rooms, resolution and template based to number of rooms and resolution.<br> 
+        The "Show details" button shows the information of the display (also you can edit and delete the display) and the scheduled events.  
+        
+      </template>
+    </b-popover>
+    
+    
+    
     <b-table
       striped
       hover
@@ -19,9 +34,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
       <template v-slot:cell(show_details)="row">
         <b-button
           squared
-          variant="info"
           @click="openDisplayDetails(row.item)"
-          class="mr-5"
+          class="upload-button mr-5"
         >
           {{ row.detailsShowing ? "Hide" : "Show" }} Details
         </b-button>
@@ -109,7 +123,7 @@ export default {
           Date.now() - item.lastState > this.NO_STATUS_THRESHOLD
         ) {
           item.status = "No status";
-          item._rowVariant = "danger";
+          item._rowVariant = "secondary";
         } else if (item.errorMessage) {
           item.status = "Error";
           item._rowVariant = "danger";
@@ -177,6 +191,14 @@ export default {
 </script>
 
 <style scoped>
+.upload-button {
+  background-color: #1B5E20;
+  color: white;
+  font-weight: bold;
+}
+.upload-button:hover {
+  background-color: #43A047; /* Change background color on hover */
+}
 .detailModal {
   text-align: center;
 }
