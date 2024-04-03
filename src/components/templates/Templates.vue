@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <template>
   <div>
-    <b-button variant="success" to="/template-form" class="mb-2">
+    <b-button  to="/template-form" class="mb-2 show_details">
       Add template
     </b-button>
     <b-button variant="secondary" id="info-button" class="mb-2 ml-1" >
