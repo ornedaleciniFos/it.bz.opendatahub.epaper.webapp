@@ -9,12 +9,11 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
     <div>
       <b-button
-        variant="success"
         :to="{
           name: 'Display Schedule Form',
           params: { displayUuid: displayUuid },
         }"
-        class="mb-2"
+        class="mb-2 show_details"
       >
         Plan new content
       </b-button>

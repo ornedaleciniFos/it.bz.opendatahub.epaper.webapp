@@ -6,7 +6,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <template>
   <div>
-    <b-button variant="success" to="/display-form" class="mb-2">
+    <b-button to="/display-form" class="mb-2 upload-button">
       Add display
     </b-button>
      <!-- Info button with popover -->
