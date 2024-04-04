@@ -9,6 +9,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
     <div class="canvas-wrapper">
       <button @click.prevent="addNewBox">Add Text Area</button>
       <label for="fileInput" class="upload-button">Upload Image</label>
+      
+
+     
       <div class="canvas-border">
         <input
           type="file"
@@ -84,9 +87,10 @@ export default {
   props: {
     textBoxData: Array,
     resolutionUuid: String,
-    //room: Number,
+    room: Number,
     header: Boolean,
     footer: Boolean,
+    multipleRoom: Boolean,
     //indexUp: Number,
   },
   data() {
@@ -110,7 +114,6 @@ export default {
       indexes: [],
       previewImageUrl: "",
       indexUp: 0,
-      room:0,
     };
   },
   computed: {
@@ -124,6 +127,8 @@ export default {
     const scaledHeight = this.canvasHeight;
     const canvas = this.$refs.canvasRef;
     canvas.width = scaledWidth;
+
+    this.$set(this.roomData, 0, this.room);
     canvas.height = scaledHeight;
     if (typeof this.$props.room === 'undefined') {
         this.room = 1; // Set a default value if the prop is undefined
@@ -148,6 +153,12 @@ export default {
         this.updateCanvasBorderSize();
       },
       deep: true,
+    },
+    multipleRoom: {
+    handler() {
+      this.updateCanvasBorderSize();
+    },
+    deep: true,
     },
     header: {
       handler() {
@@ -327,9 +338,10 @@ export default {
             this.indexes.splice(index, 1);
           } else if (
             !this.indexes.includes(index) &&
-            this.boxes[index].repeat == true
+            this.boxes[index].repeat == true && this.boxes[index].isRepeated==false
           ) {
             this.indexes.push(index);
+            this.boxes[index].isRepeated= true;
             let varY = data.yPos + this.roomData[2];
             for (let i = 0; i < this.roomData[0]-1 ; i++) {
               const newBox = {
@@ -347,7 +359,6 @@ export default {
             
           }
         }
-        //alert(JSON.stringify(textBoxData, null, 2));
         this.$emit("updateTextBoxData", this.boxes);
        this.$emit("boxes", this.boxes);
        this.$emit("textBoxData", this.boxes);
@@ -450,7 +461,8 @@ export default {
         ctx.lineCap = "butt";
       }
       this.$emit("updateRoomData", this.roomData);
-      if (this.roomData[0] > 1) {
+
+      if (this.multipleRoom) {
         ctx.strokeStyle = "gray";
         ctx.setLineDash([5, 5]);
         for (let i = 1; i <= numLines; i++) {
@@ -697,11 +709,14 @@ textarea {
 .upload-button {
   cursor: pointer;
   display: inline-block;
-  padding: 10px;
-  background-color: #3498db;
-  color: #fff;
-  border-radius: 5px;
+  background-color: #EEEEEE;
+  color: black;
   margin-top: 10px;
+  margin-left: 10px;
+  border: 1px solid #cccccc; /* Add border */
+}
+.upload-button:hover {
+  background-color: #dddddd; /* Change background color on hover */
 }
 
 input[type="file"] {

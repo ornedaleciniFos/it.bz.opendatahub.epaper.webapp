@@ -677,11 +677,14 @@ textarea {
 .upload-button {
   cursor: pointer;
   display: inline-block;
-  padding: 10px;
-  background-color: #3498db;
-  color: #fff;
-  border-radius: 5px;
+  background-color: #EEEEEE;
+  color: black;
   margin-top: 10px;
+  margin-left: 10px;
+  border: 1px solid #cccccc; /* Add border */
+}
+.upload-button:hover {
+  background-color: #dddddd; /* Change background color on hover */
 }
 
 input[type="file"] {

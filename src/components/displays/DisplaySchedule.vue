@@ -9,15 +9,26 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
     <div>
       <b-button
-        variant="success"
         :to="{
           name: 'Display Schedule Form',
           params: { displayUuid: displayUuid },
         }"
-        class="mb-2"
+        class="mb-2 show_details"
       >
         Plan new content
       </b-button>
+      <b-button variant="secondary" id="info-button2" class="mb-2 ml-1" >
+      Info
+    </b-button>
+    <b-popover target="info-button2" triggers="hover">
+      <template #title>Information about scheduled events</template>
+      <template #default>
+        The "Plan new content" button allows you to add a new event. You can add a description, time, template(if it is one room display), or room selection (if it is multiple room display). <br>
+        The "Preview details" button previews the display based on the event.<br>
+        The "Edit" button allows modification of the event.<br>
+        The "Delete"" button deletes the event.
+      </template>
+    </b-popover>
 
       <b-table
         striped
@@ -56,7 +67,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             squared
             variant="info"
             @click="row.toggleDetails"
-            class="mr-2"
+            class="mr-2 show_details"
           >
             {{ row.detailsShowing ? "Hide" : "Preview" }}
             Details
@@ -169,6 +180,7 @@ export default {
     },
     toggleEditForm(item) {
       this.rowToEdit = item;
+     
       if (item) {
         let display = this.$store.state.displays.find(
           (d) => d.uuid === this.displayUuid,
@@ -223,3 +235,15 @@ export default {
   },
 };
 </script>
+
+
+<style scoped>
+.show_details {
+  background-color: #1B5E20;
+  color: white;
+  font-weight: bold;
+}
+.show_details:hover {
+  background-color: #43A047; /* Change background color on hover */
+}
+</style>

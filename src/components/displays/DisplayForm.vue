@@ -83,6 +83,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           v-model="templateUuid"
           :options="templates"
           :disabled="!enableTemplateSection"
+          required
         >
           <template v-slot:first>
             <b-form-select-option :value="null" disabled
