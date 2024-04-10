@@ -1,11 +1,14 @@
+<!--
+SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <template>
   <div class="canvas-container">
     <div class="canvas-wrapper">
       <button @click.prevent="addNewBox">Add Text Area</button>
       <label for="fileInput" class="upload-button">Upload Image</label>
-      
 
-     
       <div class="canvas-border">
         <input
           type="file"
@@ -85,7 +88,7 @@ export default {
     header: Boolean,
     footer: Boolean,
     multipleRoom: Boolean,
-    //indexUp: Number,
+    selectedTemplateId: Number,
   },
   data() {
     return {
@@ -110,25 +113,13 @@ export default {
       indexUp: 0,
     };
   },
-  computed: {
-    processedCustomText: function () {
-      // Replace newline characters with an empty string
-      return this.box.customText.replace(/\n/g, "");
-    },
-  },
   mounted() {
     const scaledWidth = this.canvasWidth;
     const scaledHeight = this.canvasHeight;
     const canvas = this.$refs.canvasRef;
     canvas.width = scaledWidth;
-
     this.$set(this.roomData, 0, this.room);
     canvas.height = scaledHeight;
-    if (typeof this.$props.room === 'undefined') {
-        this.room = 1; // Set a default value if the prop is undefined
-      } else {
-        this.room = this.$props.room; // Use the prop value
-      }
     this.getResolution();
     this.updateCanvasBorderSize();
   },
@@ -149,10 +140,10 @@ export default {
       deep: true,
     },
     multipleRoom: {
-    handler() {
-      this.updateCanvasBorderSize();
-    },
-    deep: true,
+      handler() {
+        this.updateCanvasBorderSize();
+      },
+      deep: true,
     },
     header: {
       handler() {
@@ -166,6 +157,28 @@ export default {
       },
       deep: true,
     },
+    selectedTemplateId: {
+      handler() {
+        let template = this.$store.state.templates.find(
+          (t) => t.uuid === this.selectedTemplateId,
+        );
+
+        if (
+          template &&
+          template.displayContent &&
+          template.displayContent.imageFields
+        ) {
+          template.displayContent.imageFields.forEach((field) => {
+            this.boxes.push(field);
+          });
+        }
+        this.$emit("updateTextBoxData", this.boxes);
+        this.$emit("boxes", this.boxes);
+        this.$emit("textBoxData", this.boxes);
+        this.printTextBoxData();
+      },
+      deep: true,
+    },
     indexUp(newValue) {
       this.$emit("updateIndexUp", newValue);
     },
@@ -175,10 +188,6 @@ export default {
       },
       deep: true,
     },
-    /*  updateCanvasBorderSize: {
-      handler() {},
-      deep: true,
-    },*/
   },
   methods: {
     updateIndexUp(newValue) {
@@ -194,7 +203,7 @@ export default {
       this.boxes.forEach((box) => {
         if (box.customText === "img") {
           const image = new Image();
-          image.src = box.image; // Set the base64 string as the image source
+          image.src = box.image; 
           ctx.drawImage(image, box.xPos, box.yPos, box.width, box.height);
           if (box.border) {
             ctx.strokeStyle = "#000000";
@@ -202,24 +211,16 @@ export default {
             ctx.strokeRect(box.xPos, box.yPos, box.width, box.height);
           }
         } else {
-          // Draw a rectangle for text boxes with white background and border
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(box.xPos, box.yPos, box.width, box.height);
-          // Draw text in black with styles
           ctx.fillStyle = "#000000";
           ctx.font = `${box.italic ? "italic" : ""} ${box.bold ? "bold" : ""} ${box.fontSize}px sans-serif`;
-
-          // Split the text by new line characters
           const lines = box.customText.split("\n");
-
-          // Draw each line separately
           let offsetY = 0;
           lines.forEach((line) => {
             ctx.fillText(line, box.xPos, box.yPos + offsetY + box.fontSize);
-            offsetY += box.fontSize * 1.2; // Adjust line spacing as needed
+            offsetY += box.fontSize * 1.2; 
           });
-
-          // Draw border if specified
           if (box.border) {
             ctx.strokeStyle = "#000000";
             ctx.lineWidth = 2;
@@ -227,26 +228,22 @@ export default {
           }
         }
       });
-
-      // Convert the canvas to a data URL
       const dataURL = canvas.toDataURL();
       return dataURL;
     },
     handleImageUpload(event) {
       const input = event.target;
       const file = input.files[0];
-
       if (file) {
         const reader = new FileReader();
-
         reader.onload = (e) => {
           const image = new Image();
           image.onload = () => {
             const newBox = {
               xPos: 50,
               yPos: 50,
-              width: image.width / 2,
-              height: image.height / 2,
+              width: image.width,
+              height: image.height,
               customText: "img",
               fieldType: "EVENT_DESCRIPTION",
               fontSize: 0,
@@ -282,7 +279,7 @@ export default {
         height: 100,
         customText: "Type here...",
         fieldType: "EVENT_DESCRIPTION",
-        fontSize: 15,
+        fontSize: 22,
         bold: false,
         italic: false,
         image: null,
@@ -311,7 +308,6 @@ export default {
     updateTextAreas(textBoxData) {
       textBoxData.forEach((data, index) => {
         if (this.boxes[index]) {
-          // Update text property
           this.boxes[index].customText = data.customText;
           this.boxes[index].width = data.width;
           this.boxes[index].xPos = data.xPos;
@@ -332,12 +328,13 @@ export default {
             this.indexes.splice(index, 1);
           } else if (
             !this.indexes.includes(index) &&
-            this.boxes[index].repeat == true && this.boxes[index].isRepeated==false
+            this.boxes[index].repeat == true &&
+            this.boxes[index].isRepeated == false
           ) {
             this.indexes.push(index);
-            this.boxes[index].isRepeated= true;
+            this.boxes[index].isRepeated = true;
             let varY = data.yPos + this.roomData[2];
-            for (let i = 0; i < this.roomData[0]-1 ; i++) {
+            for (let i = 0; i < this.roomData[0] - 1; i++) {
               const newBox = {
                 ...data,
                 field: data.field,
@@ -347,31 +344,17 @@ export default {
               };
               varY += this.roomData[2];
               this.boxes.push(newBox);
-              
-            }this.printTextBoxData();
-
-            
+            }
+            this.printTextBoxData();
           }
         }
+
         this.$emit("updateTextBoxData", this.boxes);
-       this.$emit("boxes", this.boxes);
-       this.$emit("textBoxData", this.boxes);
+        this.$emit("boxes", this.boxes);
+        this.$emit("textBoxData", this.boxes);
       });
 
-     // this.boxes = textBoxData;
-    },
-    handleNewLine() {
-      //event.target.value += '\n';
-      // this.box.customText = this.box.customText.replace(/\n/g, "\\n");
-      // Get the current textarea value
-      const currentValue = this.boxes[this.indexUp].customText;
-      // Calculate the cursor position within the textarea
-      const cursorPos = this.$refs[`textarea_${this.indexUp}`].selectionStart;
-      // Insert a newline character at the cursor position
-      const newValue =
-        currentValue.slice(0, cursorPos) + "\n" + currentValue.slice(cursorPos);
-      // Update the textarea value with the new value
-      this.boxes[this.indexUp].customText = newValue;
+      // this.boxes = textBoxData;
     },
     updateBoxDimensions(index) {
       const box = this.boxes[index];
@@ -436,14 +419,7 @@ export default {
         this.roomData[2] = lineHeight;
         this.$set(this.roomData, 2, lineHeight);
       }
-     /* if (this.room[0] == 0) {
-        this.roomData[0] = 1;
-        this.$set(this.roomData, 0, 1);
-      } else {
-        this.roomData[0] = this.room;
-        this.$set(this.roomData, 0, this.room);
-      }*/
-      if (canvas.height  == 5120 && canvas.width  == 1440) {
+      if (canvas.height == 5120 && canvas.width == 1440) {
         ctx.strokeStyle = "black";
         ctx.lineWidth = 10;
         ctx.lineCap = "round";
@@ -630,6 +606,7 @@ button {
   width: 100%;
   height: 100%;
   border: 1px dashed #000;
+  white-space: pre-wrap;
   /* Set the border to dashed style */
 }
 
@@ -681,7 +658,6 @@ textarea {
   border: 2px solid #000;
   overflow: hidden;
   margin: 0px;
- 
 }
 
 .canvas-wrapper {
@@ -703,7 +679,7 @@ textarea {
 .upload-button {
   cursor: pointer;
   display: inline-block;
-  background-color: #EEEEEE;
+  background-color: #eeeeee;
   color: black;
   margin-top: 10px;
   margin-left: 10px;

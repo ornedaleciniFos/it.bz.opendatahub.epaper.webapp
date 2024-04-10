@@ -27,8 +27,11 @@
           >
             <td>{{ index }}</td>
             <td>
-              <select v-model="box.fieldType" style="width: 100%; font-size: 12px;">
-                <option value="LOCATION_NAME" >LOCATION_NAME</option>
+              <select
+                v-model="box.fieldType"
+                style="width: 100%; font-size: 12px"
+              >
+                <option value="LOCATION_NAME">LOCATION_NAME</option>
                 <option value="EVENT_DESCRIPTION">EVENT_DESCRIPTION</option>
                 <option value="EVENT_START_DATE">EVENT_START_DATE</option>
                 <option value="EVENT_END_DATE">EVENT_END_DATE</option>
@@ -150,23 +153,22 @@ export default {
       handler() {
         this.updateTextData();
       },
-      deep: true,    },
+      deep: true,
+    },
   },
   methods: {
     updateTextData() {
       this.$emit("updateTextBoxData", this.textBoxData);
-     
     },
     deleteTextBox(index) {
       if (confirm("Are you sure you want to delete this text box?")) {
         this.textBoxData.splice(index, 1);
-       //this.boxes.splice(index, 1);
+        //this.boxes.splice(index, 1);
         this.updateTextData();
-        
       }
-       this.$emit("boxes",this.textBoxData);
-       this.$emit("updateTextBoxData", this.textBoxData);
-       this.$emit("textBoxData", this.textBoxData);
+      this.$emit("boxes", this.textBoxData);
+      this.$emit("updateTextBoxData", this.textBoxData);
+      this.$emit("textBoxData", this.textBoxData);
     },
   },
 };
@@ -189,7 +191,7 @@ export default {
   background-color: #f2f2f2;
 }
 .small-input {
-  width: 70px; 
+  width: 70px;
 }
 .active-row {
   background-color: #808080;
