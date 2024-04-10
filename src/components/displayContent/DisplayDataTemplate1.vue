@@ -146,7 +146,7 @@ export default {
   props: {
     textBoxData: Array,
     updateTextBoxData: Function,
-    handleRoomdata:Function,
+    handleRoomdata: Function,
     roomTextBoxData: Array,
     indexUp: Number,
     room: Number,
@@ -158,7 +158,6 @@ export default {
       if (this.selectedRoomIndex !== null) {
         // Call the isEditable method here to filter out items based on editability
         return this.textBoxData.filter((box, index) => this.isEditable(index));
-        
       }
       return this.textBoxData;
     },
@@ -181,13 +180,14 @@ export default {
   methods: {
     updateTextData() {
       this.$emit("updateTextBoxData", this.textBoxData);
-      const roomTextBoxData = this.selectedRoomIndex !== null ? this.filteredTextBoxData : [];
+      const roomTextBoxData =
+        this.selectedRoomIndex !== null ? this.filteredTextBoxData : [];
       this.$emit("roomTextBoxData", roomTextBoxData);
     },
     deleteTextBox(index) {
       if (confirm("Are you sure you want to delete this text box?")) {
         this.textBoxData.splice(index, 1);
-        this.boxes.splice(index, 1);
+        //this.boxes.splice(index, 1);
         this.updateTextData();
       }
       this.$emit("boxes", this.textBoxData);
@@ -204,11 +204,18 @@ export default {
         template &&
         template.roomData.length >= 2
       ) {
-        
-        let start = template.roomData[1] + (this.selectedRoomIndex - 1) * template.roomData[2];
+        let start =
+          template.roomData[1] +
+          (this.selectedRoomIndex - 1) * template.roomData[2];
         let end = start + template.roomData[2];
-        const isWithinRange = this.textBoxData[index].yPos >= start &&   this.textBoxData[index].yPos < end;
-        return  (this.textBoxData[index].isRepeat === false && this.textBoxData[index].isRepeated === false) || isWithinRange ;
+        const isWithinRange =
+          this.textBoxData[index].yPos >= start &&
+          this.textBoxData[index].yPos < end;
+        return (
+          (this.textBoxData[index].isRepeat === false &&
+            this.textBoxData[index].isRepeated === false) ||
+          isWithinRange
+        );
       }
       return false;
     },

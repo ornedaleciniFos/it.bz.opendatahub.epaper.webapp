@@ -8,6 +8,18 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   <div class="canvas-container">
     <button @click.prevent="addNewBox">Add Text Area</button>
     <label for="fileInput" class="upload-button">Upload Image</label>
+    <b-button variant="secondary" id="info-button2" class="mb-2 ml-1">
+      Info
+    </b-button>
+    <b-popover target="info-button2" triggers="hover">
+      <template #title>Information about multi-events display</template>
+      <template #default>
+        The fields appeared are the fields of the template attached to the display. The fields that are repeated are not movable and the size cannot change. They can be modified just in template.<br />
+        You can select the room and a red space will be shown, so the event that you are creating will take only the data of the red space. If you want static data out of the event space, you need to add to the template.
+        
+        
+      </template>
+    </b-popover>
     <div class="canvas-border">
       <input
         type="file"
@@ -20,8 +32,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         class="image_canvas"
         :id="canvasid"
         ref="canvasRef"
-        :width="canvasWidth * 0.6 + 'px'"
-        :height="canvasHeight * 0.6 + 'px'"
+        :width="canvasWidth + 'px'"
+        :height="canvasHeight  + 'px'"
       ></canvas>
       <div
         v-for="(box, index) in boxes"
@@ -65,9 +77,6 @@ SPDX-License-Identifier: AGPL-3.0-or-later
               border: box.border ? '2px solid #000' : 'dashed',
             }"
             style="overflow: hidden"
-            @keydown.enter.exact.prevent="handleNewLine"
-            @keydown.enter.meta.exact.prevent
-            @keydown.enter.ctrl.exact.prevent
           ></textarea>
 
           <div
@@ -85,11 +94,10 @@ export default {
   props: {
     textBoxData: Array,
     resolutionUuid: String,
-    //room: Number,
     selectedRoomIndex: Number,
     header: Boolean,
     footer: Boolean,
-    //indexUp: Number,
+    templateId: String,
   },
   data() {
     return {
@@ -115,23 +123,12 @@ export default {
       room:1
     };
   },
-  computed: {
-    processedCustomText: function () {
-      // Replace newline characters with an empty string
-      return this.box.customText.replace(/\n/g, "");
-    },
-  },
   mounted() {
-    const scaledWidth = this.canvasWidth * 0.6;
-    const scaledHeight = this.canvasHeight * 0.6;
+    const scaledWidth = this.canvasWidth ;
+    const scaledHeight = this.canvasHeight ;
     const canvas = this.$refs.canvasRef;
     canvas.width = scaledWidth;
     canvas.height = scaledHeight;
-    if (typeof this.$props.room === 'undefined') {
-        this.room = 0; // Set a default value if the prop is undefined
-      } else {
-        this.room = this.$props.room; // Use the prop value
-      }
     this.getResolution();
     this.updateCanvasBorderSize();
   },
@@ -172,22 +169,28 @@ export default {
       },
       deep: true,
     },
+    selectedRoomIndex:{
+    handler() {
+        this.updateCanvasBorderSize();
+    },
+    deep: true,
+  },
   },
   methods: {
     updateIndexUp(newValue) {
       this.indexUp = newValue;
     },
-    saveCanvas() {
+    saveCanvas(fields) {
       const canvas = this.$refs.canvasRef;
       const ctx = canvas.getContext("2d");
 
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      this.boxes.forEach((box) => {
+      fields.forEach((box) => {
         if (box.customText === "img") {
           const image = new Image();
-          image.src = box.image; // Set the base64 string as the image source
+          image.src = box.image; 
           ctx.drawImage(image, box.xPos, box.yPos, box.width, box.height);
           if (box.border) {
             ctx.strokeStyle = "#000000";
@@ -195,25 +198,18 @@ export default {
             ctx.strokeRect(box.xPos, box.yPos, box.width, box.height);
           }
         } else {
-          // Draw a rectangle for text boxes with white background and border
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(box.xPos, box.yPos, box.width, box.height);
-
-          // Draw text in black with styles
           ctx.fillStyle = "#000000";
           ctx.font = `${box.italic ? "italic" : ""} ${box.bold ? "bold" : ""} ${box.fontSize}px sans-serif`;
-
-          // Split the text by new line characters
           const lines = box.customText.split("\n");
 
-          // Draw each line separately
           let offsetY = 0;
           lines.forEach((line) => {
             ctx.fillText(line, box.xPos, box.yPos + offsetY + box.fontSize);
-            offsetY += box.fontSize * 1.2; // Adjust line spacing as needed
+            offsetY += box.fontSize * 1.2; 
           });
 
-          // Draw border if specified
           if (box.border) {
             ctx.strokeStyle = "#000000";
             ctx.lineWidth = 2;
@@ -222,7 +218,6 @@ export default {
         }
       });
 
-      // Convert the canvas to a data URL
       const dataURL = canvas.toDataURL();
       return dataURL;
     },
@@ -239,8 +234,8 @@ export default {
             const newBox = {
               xPos: 50,
               yPos: 50,
-              width: image.width / 2,
-              height: image.height / 2,
+              width: image.width,
+              height: image.height ,
               customText: "img",
               fieldType: "EVENT_DESCRIPTION",
               fontSize: 0,
@@ -276,7 +271,7 @@ export default {
         height: 100,
         customText: "Type here...",
         fieldType: "EVENT_DESCRIPTION",
-        fontSize: 15,
+        fontSize: 22,
         bold: false,
         italic: false,
         image: null,
@@ -305,7 +300,6 @@ export default {
     updateTextAreas(textBoxData) {
       textBoxData.forEach((data, index) => {
         if (this.boxes[index]) {
-          // Update text property
           this.boxes[index].customText = data.customText;
           this.boxes[index].width = data.width;
           this.boxes[index].xPos = data.xPos;
@@ -346,25 +340,12 @@ export default {
             this.printTextBoxData();
           }
         }
-        this.$emit("updateTextBoxData", this.boxes);
+        this.$emit("updateTextBoxData", this.textBoxData);
         this.$emit("boxes", this.textBoxData);
         this.$emit("textBoxData", this.textBoxData)
       });
 
       this.boxes = textBoxData;
-    },
-    handleNewLine() {
-      //event.target.value += '\n';
-      // this.box.customText = this.box.customText.replace(/\n/g, "\\n");
-      // Get the current textarea value
-      const currentValue = this.boxes[this.indexUp].customText;
-      // Calculate the cursor position within the textarea
-      const cursorPos = this.$refs[`textarea_${this.indexUp}`].selectionStart;
-      // Insert a newline character at the cursor position
-      const newValue =
-        currentValue.slice(0, cursorPos) + "\n" + currentValue.slice(cursorPos);
-      // Update the textarea value with the new value
-      this.boxes[this.indexUp].customText = newValue;
     },
     updateBoxDimensions(index) {
       const box = this.boxes[index];
@@ -380,61 +361,10 @@ export default {
       this.getResolution();
       const canvas = this.$refs.canvasRef;
       const ctx = canvas.getContext("2d");
-      const numLines = 5;
-      let lineHeight = canvas.height / (numLines + 1);
       this.boxes = this.boxes.filter(
         (box) => box.yPos + box.height <= canvas.height,
       );
-      let marginTop = 0;
-      let marginBottom = 0;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = "red";
-      ctx.setLineDash([5, 5]);
-      this.roomData[1] = 0;
-      this.$set(this.roomData, 1, 0);
-      if (this.header) {
-        marginTop = 100;
-        ctx.beginPath();
-        ctx.moveTo(0, marginTop);
-        ctx.lineTo(canvas.width, marginTop);
-        ctx.stroke();
-        this.roomData[1] = 100;
-        this.$set(this.roomData, 1, 100);
-      }
-
-      if (this.footer) {
-        marginBottom = 100;
-        const redLineYBottom = canvas.height - marginBottom;
-        ctx.beginPath();
-        ctx.moveTo(0, redLineYBottom);
-        ctx.lineTo(canvas.width, redLineYBottom);
-        ctx.stroke();
-      }
-      if (this.header && this.footer) {
-        lineHeight =
-          (canvas.height - marginBottom - marginTop) / (numLines + 1);
-        this.roomData[2] = lineHeight;
-        this.$set(this.roomData, 2, lineHeight);
-      } else if (this.header) {
-        lineHeight = (canvas.height - marginTop) / (numLines + 1);
-        this.roomData[2] = lineHeight;
-        this.$set(this.roomData, 2, lineHeight);
-      } else if (this.footer) {
-        lineHeight = (canvas.height - marginBottom) / (numLines + 1);
-        this.roomData[2] = lineHeight;
-        this.$set(this.roomData, 2, lineHeight);
-      } else {
-        lineHeight = canvas.height / (numLines + 1);
-        this.roomData[2] = lineHeight;
-        this.$set(this.roomData, 2, lineHeight);
-      }
-      if (this.room[0] == 0) {
-        this.roomData[0] = 1;
-        this.$set(this.roomData, 0, 1);
-      } else {
-        this.roomData[0] = this.room;
-        this.$set(this.roomData, 0, this.room);
-      }
+    
       if (canvas.height == 5120 && canvas.width == 1440) {
         ctx.strokeStyle = "black";
         ctx.lineWidth = 10;
@@ -446,18 +376,15 @@ export default {
         ctx.lineWidth = 1;
         ctx.lineCap = "butt";
       }
-      this.$emit("updateRoomData", this.roomData);
-      if (this.roomData[0] != 1) {
-        ctx.strokeStyle = "gray";
-        ctx.setLineDash([5, 5]);
-        for (let i = 1; i <= numLines; i++) {
-          const y = i * lineHeight + marginTop;
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(canvas.width, y);
-          ctx.stroke();
-        }
+      let template = this.$store.state.templates.find((t) => t.uuid === this.templateId);
+      if(this.selectedRoomIndex){
+        
+        let start = template.roomData[1] + (this.selectedRoomIndex - 1) * template.roomData[2];
+        let end = start + template.roomData[2];
+        ctx.fillStyle = "rgba(255, 192, 203, 0.5)"; 
+        ctx.fillRect(0, start, canvas.width, end - start);
       }
+     // this.$emit("updateRoomData", this.template.roomData);
     },
 
     printTextBoxData() {
@@ -621,6 +548,7 @@ button {
   width: 100%;
   height: 100%;
   border: 1px dashed #000;
+  white-space: pre-wrap;
   /* Set the border to dashed style */
 }
 

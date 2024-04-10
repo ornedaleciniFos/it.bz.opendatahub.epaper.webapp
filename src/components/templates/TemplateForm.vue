@@ -7,9 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 <template>
   <b-form @submit.prevent="submitTemplate">
     <div class="editor">
-    
       <b-card :title="pageTitle" class="form_card">
-  
         <b-card-text>
           <b-form-input
             v-model="name"
@@ -39,8 +37,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
                       v-model="numRooms"
                       id="numRooms"
                       type="number"
-                      min=2
-                      max=6
+                      min="2"
+                      max="6"
                     ></b-form-input>
                   </label>
                 </b-form-group>
@@ -74,7 +72,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           />
         </b-card-text>
       </b-card>
-      
+
       <b-card v-if="resolutionUuid" class="imagePrevieww">
         Template preview
 
@@ -122,9 +120,9 @@ export default {
     initialHeader: Boolean,
     initialMultipleRoom: Boolean,
     initialRoomData: {
-        type: Array,
-        default: () => [] // Set a default empty array if initialRoomData is not provided
-      },
+      type: Array,
+      default: () => [], // Set a default empty array if initialRoomData is not provided
+    },
   },
   components: {
     ImagePreview,
@@ -143,12 +141,12 @@ export default {
       isChecked: false,
       textBoxData: this.initialImageFields || [],
       multipleRoom: this.initialMultipleRoom || false,
-      numRooms: this.initialRoomData[0]|| 1,
+      numRooms: this.initialRoomData[0] || 1,
       header: this.initialHeader || false,
       footer: this.initialFooter || false,
       roomData: this.initialRoomData || [],
       indexUp: null,
-      room:1,
+      room: 1,
     };
   },
   computed: {
@@ -204,7 +202,7 @@ export default {
       deep: true,
       handler() {},
     },
-    
+
     imageFields: {
       deep: true,
       handler() {
@@ -216,11 +214,11 @@ export default {
       handler() {},
     },
     numRooms: {
-        deep: true,
-        handler(val) {
-          this.$set(this.roomData, 0, val);
-        },
+      deep: true,
+      handler(val) {
+        this.$set(this.roomData, 0, val);
       },
+    },
   },
 
   methods: {
