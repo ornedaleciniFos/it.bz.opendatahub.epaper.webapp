@@ -16,7 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           >
             Override content defined in Scheduler
           </b-form-checkbox>
-          
+
           <b-form-group label="Choose a picture:" class="form_group">
             <b-form-file v-model="image" accept="image/*"></b-form-file>
           </b-form-group>
@@ -46,7 +46,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         :imageSrc="imageSrc"
         :imageFields="imageFields"
         :focusedFieldIndex="focusedFieldIndex"
-        :displayScreen=dis()
+        :displayScreen="dis()"
       ></ImagePreview>
     </div>
     <div>
@@ -77,14 +77,13 @@ export default {
       selectedTemplateId: null,
       image: null,
       imageFields: this.initialImageFields || [],
-      focusedFieldIndex: null,  
-      
+      focusedFieldIndex: null,
     };
   },
   computed: {
     templates() {
       return this.$store.state.templates;
-    }, 
+    },
     displays() {
       return this.$store.state.displays;
     },
@@ -114,27 +113,28 @@ export default {
         image,
         displayUuid,
         templateUuid: selectedTemplateId,
-        displayContent: { //image upload 
+        displayContent: {
+          //image upload
           imageFields,
         },
       };
-      alert(JSON.stringify(data,null,2));
+      alert(JSON.stringify(data, null, 2));
       this.$store
         .dispatch("updateDisplayContent", data)
         .then(() => {
           this.$bvToast.toast(
             "Display image saved successfully",
-            toastPresets.successMessage
+            toastPresets.successMessage,
           );
         })
         .catch(() => {
           this.$bvToast.toast(
             "Failed to save image",
-            toastPresets.errorMessage
+            toastPresets.errorMessage,
           );
         });
     },
-    dis(){
+    dis() {
       let display = this.displays.find((d) => d.uuid === this.displayUuid);
       //let resolution= this.resolution.find((r) => r.uuid === this.display.resolution_id)
       return display.resolution;

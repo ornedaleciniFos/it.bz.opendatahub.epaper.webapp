@@ -23,7 +23,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           </b-col>
         </b-row>
         <b-row v-if="display.roomCodes">
-          <b-col> Location: {{ formatRooms.join(', ') }} </b-col>
+          <b-col> Location: {{ formatRooms.join(", ") }} </b-col>
         </b-row>
         <b-row>
           <b-col :class="batteryLevelClass">
@@ -89,12 +89,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
       </b-col>
 
       <b-col>
-        
         <b-img
           style="
             border: 2px solid black;
             border-radius: 5px;
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+            box-shadow:
+              0 4px 8px 0 rgba(0, 0, 0, 0.2),
               0 6px 20px 0 rgba(0, 0, 0, 0.19);
           "
           :class="{ invertedImage: display.inverted }"
@@ -124,19 +124,16 @@ export default {
       }
       return null;
     },
-    formatRooms(){
-    let rooms=[];
-	for (let code of this.display.roomCodes) {
-
-     let room = this.$store.state.rooms.find(
-       (room) => room.code === code
-     );
-     if (room) {
-       rooms.push(room.name);
-     }
-   }
-	return rooms;
-},
+    formatRooms() {
+      let rooms = [];
+      for (let code of this.display.roomCodes) {
+        let room = this.$store.state.rooms.find((room) => room.code === code);
+        if (room) {
+          rooms.push(room.name);
+        }
+      }
+      return rooms;
+    },
   },
   methods: {
     editDisplay(display) {

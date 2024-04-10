@@ -9,21 +9,21 @@ SPDX-License-Identifier: AGPL-3.0-or-later
     <b-button to="/display-form" class="mb-2 upload-button">
       Add display
     </b-button>
-     <!-- Info button with popover -->
-    <b-button variant="secondary" id="info-button" class="mb-2 ml-1" >
+    <!-- Info button with popover -->
+    <b-button variant="secondary" id="info-button" class="mb-2 ml-1">
       Info
     </b-button>
     <b-popover target="info-button" triggers="hover">
       <template #title>Information about display</template>
       <template #default>
-        The "Add new display" button allows you to add a new display. You can add a new display, by adding id, name, rooms, resolution and template based to number of rooms and resolution.<br> 
-        The "Show details" button shows the information of the display (also you can edit and delete the display) and the scheduled events.  
-        
+        The "Add new display" button allows you to add a new display. You can
+        add a new display, by adding id, name, rooms, resolution and template
+        based to number of rooms and resolution.<br />
+        The "Show details" button shows the information of the display (also you
+        can edit and delete the display) and the scheduled events.
       </template>
     </b-popover>
-    
-    
-    
+
     <b-table
       striped
       hover
@@ -108,7 +108,7 @@ export default {
         if (item.roomCodes) {
           for (let code of item.roomCodes) {
             let room = this.$store.state.rooms.find(
-              (room) => room.code === code
+              (room) => room.code === code,
             );
             if (room) {
               rooms.push(room.name);
@@ -165,7 +165,7 @@ export default {
           (r) =>
             r.width === this.screenWidth &&
             r.height === this.screenHeight &&
-            r.bitDepth === this.screenBitDepth
+            r.bitDepth === this.screenBitDepth,
         );
         let formProps = {
           display,
@@ -192,12 +192,12 @@ export default {
 
 <style scoped>
 .upload-button {
-  background-color: #1B5E20;
+  background-color: #1b5e20;
   color: white;
   font-weight: bold;
 }
 .upload-button:hover {
-  background-color: #43A047; /* Change background color on hover */
+  background-color: #43a047; /* Change background color on hover */
 }
 .detailModal {
   text-align: center;

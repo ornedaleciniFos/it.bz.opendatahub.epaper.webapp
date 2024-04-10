@@ -130,6 +130,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           :textBoxData="textBoxData"
           :indexUp="indexUp"
           @updateIndexUp="updateIndexUp"
+          :selectedTemplateId="selectedTemplateId"
           :roomData="roomData"
           ref="imagePrevieww"
         />
@@ -174,6 +175,7 @@ export default {
     initialImageFields: Array,
     initialOverride: Boolean,
     initialTemplate: String,
+    initialRoom: String,
   },
   components: {
     ImagePreview,
@@ -190,18 +192,23 @@ export default {
     },
     roomTextBoxData: {
       deep: true,
-      handler() {
-      },
+      handler() {},
     },
     imageFields: {
       deep: true,
       handler() {
-        this.refreshImagePreview();
+        //this.refreshImagePreview();
       },
     },
     indexUp: {
       deep: true,
       handler() {},
+    },
+    selectedTemplateId: {
+      handler(value) {
+        this.selectedTemplateId = value;
+      },
+      deep: true,
     },
   },
   mounted() {
@@ -216,7 +223,7 @@ export default {
       );
       if (template) {
         this.selectedTemplateId = template.uuid;
-        this.onSelectedRoomChange();
+        this.onSelectedRoomChange(template);
         if (template) {
           this.header = template.header;
           this.footer = template.footer;
@@ -238,7 +245,7 @@ export default {
       image: null,
       imageFields: this.initialImageFields || [],
       textBoxData: this.initialImageFields || [],
-      selectedRoom: null,
+      selectedRoom: this.initialRoom,
       selectedRoomIndex: null,
       roomTextBoxData: [],
       indexUp: null,
@@ -273,7 +280,6 @@ export default {
       let display = this.$store.state.displays.find(
         (d) => d.uuid === this.displayUuid,
       );
-
       return this.onSelectedTemplateChange(display.template);
     },
     shouldShowTemplateSection() {
@@ -287,7 +293,9 @@ export default {
     },
 
     templates() {
-      return this.$store.state.templates;
+      return this.$store.state.templates.filter(
+        (template) => !template.multipleRoom,
+      );
     },
   },
   methods: {
@@ -301,10 +309,14 @@ export default {
       this.textBoxData = data;
     },
     updateRoomTextBoxData() {
+      let display = this.$store.state.displays.find(
+        (d) => d.uuid === this.displayUuid,
+      );
+      // Perform null check before accessing nested properties
+      let template = this.$store.state.templates.find(
+        (t) => t.uuid === display.template.uuid,
+      );
       if (this.selectedRoomIndex !== null) {
-        const template = this.templates.find(
-          (t) => t.uuid === this.selectedTemplateId,
-        );
         if (template && template.roomData.length >= 2) {
           const start =
             template.roomData[1] +
@@ -362,15 +374,17 @@ export default {
           scheduledContentUuid: uuid,
           displayContent: {
             imageFields: this.roomTextBoxData,
-            imageBase64: this.$refs.imagePreview1.saveCanvas(),
+            imageBase64: this.$refs.imagePreview1.saveCanvas(
+              this.roomTextBoxData,
+            ),
           },
         };
       }
 
-     
       let roomCodef = this.$store.state.rooms.find(
         (r) => r.name === this.selectedRoom,
       );
+
       const data = {
         startDate,
         endDate,
@@ -383,6 +397,7 @@ export default {
       if (roomCodef != null) {
         data.room = roomCodef.code;
       }
+
       data.startDate.setHours(parseInt(this.startTime.substring(0, 2)));
       data.startDate.setMinutes(parseInt(this.startTime.substring(3, 5)));
 
@@ -414,24 +429,22 @@ export default {
         });
     },
     onSelectedTemplateChange(value) {
-      this.image = null;
       let template = this.templates.find((t) => t.uuid === value);
+      //this.$emit("selectedTemplateId", value)
+      let newData = [];
       if (template) {
-        this.selectedTemplateId = value;
-        this.textBoxData = [
-          ...this.textBoxData,
+        newData.push(...this.textBoxData);
+        newData.push(
           ...(template.displayContent &&
             template.displayContent.imageFields.map((f) => ({ ...f }))),
-        ];
-        this.handleTextBoxData(this.textBoxData);
-        this.$emit("updateTextBoxData", this.textBoxData);
-      //  this.$emit("textBoxData", this.textBoxData);
+        );
+        this.handleTextBoxData(newData);
+        this.textBoxData = newData;
+        this.$emit("updateTextBoxData", newData);
+        this.$emit("textBoxData", newData);
       }
     },
-    onSelectedRoomChange() {
-      let template = this.templates.find(
-        (t) => t.uuid === this.selectedTemplateId,
-      );
+    onSelectedRoomChange(template) {
       if (template) {
         let newData = [];
         newData.push(...this.textBoxData);
