@@ -1,6 +1,12 @@
-<template >
-  <div class="canvas-container"  >
-    <button @click.prevent="addNewBox" >Add Text Area</button>
+<!--
+SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+<template>
+  <div class="canvas-container">
+    <button @click.prevent="addNewBox">Add Text Area</button>
     <label for="fileInput" class="upload-button">Upload Image</label>
     <b-button variant="secondary" id="info-button2" class="mb-2 ml-1">
       Info
