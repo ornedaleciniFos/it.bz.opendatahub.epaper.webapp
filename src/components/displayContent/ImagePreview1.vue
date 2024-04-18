@@ -368,10 +368,12 @@ export default {
       }
       
       let template = this.$store.state.templates.find((t) => t.uuid === this.templateId);
+     if(template){
       let start = template.roomData[1];
       let end = start + template.roomData[2];
       ctx.fillStyle = "rgba(255, 192, 203, 0.5)"; 
       ctx.fillRect(0, start, canvas.width, end - start);
+     }
      
     },
 
