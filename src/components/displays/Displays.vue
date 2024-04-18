@@ -62,6 +62,13 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             :display-uuid="selectedDisplay.uuid"
           />
         </b-tab>
+        <b-tab v-if="selectedDisplay.roomCodes && selectedDisplay.roomCodes.length > 1" title="Events">
+          <DisplayEvents
+            lazy
+            :scheduled-content="selectedDisplay.scheduledContent"
+            :display-uuid="selectedDisplay.uuid"
+          />
+       </b-tab>
       </b-tabs>
     </b-modal>
   </div>
@@ -69,12 +76,14 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <script>
 import DisplayInformation from "./DisplayInformation.vue";
-import DisplaySchedule from "./DisplaySchedule.vue";
+import DisplaySchedule from "./DisplaySchedule1.vue";
+import DisplayEvents from "./DisplayEvents.vue";
 
 export default {
   components: {
     DisplayInformation,
     DisplaySchedule,
+    DisplayEvents,
   },
   props: {
     // --- These props are used in QR code link ---

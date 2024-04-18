@@ -1,9 +1,3 @@
-<!--
-SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
-
-SPDX-License-Identifier: AGPL-3.0-or-later
--->
-
 <template>
   <b-card :title="pageTitle">
     <b-card-text>
@@ -153,7 +147,7 @@ export default {
         .filter((t) => {
           if (Array.isArray(t.roomData) && t.roomData.length > 0) {
             return (
-              t.roomData[0] === this.roomCodes.length &&
+              t.roomData[0] >= this.roomCodes.length &&
               t.resolution.uuid === this.resolutionUuid
             );
           }
