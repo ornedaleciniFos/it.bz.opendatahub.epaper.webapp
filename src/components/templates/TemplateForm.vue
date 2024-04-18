@@ -222,6 +222,32 @@ export default {
   },
 
   methods: {
+    checkForDuplicates() {
+      /*  const otherFields = this.textBoxData.filter(
+        (imageField) => imageField.fieldType === "OTHER",
+      );*/
+      // If there are no "OTHER" fields, filter for duplicates
+      //if (otherFields.length === 0) {
+      const filteredTextBoxData = this.textBoxData.filter(
+        (imageField) =>
+          imageField.yPos >= this.roomData[1] &&
+          imageField.yPos <= this.roomData[1] + this.roomData[2] &&
+          ((imageField.repeat && imageField.isRepeated) ||
+            (!imageField.repeat && !imageField.isRepeated)),
+      );
+      const duplicates = filteredTextBoxData.filter((imageField) => {
+        return (
+          filteredTextBoxData.filter(
+            (f) =>
+              f.fieldType !== "OTHER" && f.fieldType === imageField.fieldType,
+          ).length > 1
+        );
+      });
+      return duplicates.length === 0;
+
+      // Show warning if duplicates are found
+      //return true;
+    },
     handleTextBoxData(data) {
       this.textBoxData = data;
     },
@@ -237,62 +263,73 @@ export default {
     },
 
     submitTemplate() {
-      const {
-        name,
-        description,
-        resolutionUuid,
-        multipleRoom,
-        templateId,
-        textBoxData,
-        footer,
-        header,
-        roomData,
-        numRooms,
-      } = this;
-      const templateContent = {
-        displayContent: {
-          imageFields: textBoxData,
+      if (this.checkForDuplicates()) {
+        const {
+          name,
+          description,
+          resolutionUuid,
+          multipleRoom,
+          templateId,
+          textBoxData,
+          footer,
+          header,
+          roomData,
+          numRooms,
+        } = this;
+        const templateContent = {
+          displayContent: {
+            imageFields: textBoxData,
 
-          imageBase64: this.$refs.imagePrevieww.saveCanvas(),
-        },
-        templateUuid: templateId,
-      };
-      this.$set(roomData, 0, numRooms);
-      const template = {
-        name,
-        description,
-        resolutionUuid,
-        resolution: this.$store.state.resolutions.find(
-          (r) => r.uuid === resolutionUuid,
-        ),
-        multipleRoom,
-        roomData,
-        header,
-        footer,
-      };
-      let storeOperation;
-      if (this.editMode) {
-        storeOperation = "updateTemplate";
-        template.uuid = templateId;
+            imageBase64: this.$refs.imagePrevieww.saveCanvas(),
+          },
+          templateUuid: templateId,
+        };
+        this.$set(roomData, 0, numRooms);
+        const template = {
+          name,
+          description,
+          resolutionUuid,
+          resolution: this.$store.state.resolutions.find(
+            (r) => r.uuid === resolutionUuid,
+          ),
+          multipleRoom,
+          roomData,
+          header,
+          footer,
+        };
+        let storeOperation;
+        if (this.editMode) {
+          storeOperation = "updateTemplate";
+          template.uuid = templateId;
+        } else {
+          storeOperation = "createTemplate";
+        }
+
+        this.$store
+          .dispatch(storeOperation, template)
+          .then((template) => {
+            if (template) {
+              templateContent.templateUuid = template.uuid;
+            }
+            return this.$store.dispatch(
+              "updateTemplateContent",
+              templateContent,
+            );
+          })
+          .then(() => this.$router.replace("templates"))
+          .catch((err) => {
+            this.$bvToast.toast(
+              "Failed to save template " + err,
+              toastPresets.errorMessage,
+            );
+          });
       } else {
-        storeOperation = "createTemplate";
+        this.$bvToast.toast(
+          "Duplicate text field found",
+          toastPresets.errorMessage,
+        );
+        return;
       }
-
-      this.$store
-        .dispatch(storeOperation, template)
-        .then((template) => {
-          if (template) {
-            templateContent.templateUuid = template.uuid;
-          }
-          return this.$store.dispatch("updateTemplateContent", templateContent);
-        })
-        .then(() => this.$router.replace("templates"))
-        .catch((err) => {
-          this.$bvToast.toast(
-            "Failed to save template " + err,
-            toastPresets.errorMessage,
-          );
-        });
     },
   },
 };
