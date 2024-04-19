@@ -1,12 +1,6 @@
-<!--
-SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
-
-SPDX-License-Identifier: AGPL-3.0-or-later
--->
-
-<template>
-  <div class="canvas-container">
-    <button @click.prevent="addNewBox">Add Text Area</button>
+<template >
+  <div class="canvas-container"  >
+    <button @click.prevent="addNewBox" >Add Text Area</button>
     <label for="fileInput" class="upload-button">Upload Image</label>
     <b-button variant="secondary" id="info-button2" class="mb-2 ml-1">
       Info
@@ -125,7 +119,7 @@ export default {
   },
   mounted() {
     const scaledWidth = this.canvasWidth ;
-    const scaledHeight = this.canvasHeight ;
+    const scaledHeight = this.canvasHeight;
     const canvas = this.$refs.canvasRef;
     canvas.width = scaledWidth;
     canvas.height = scaledHeight;
@@ -162,6 +156,7 @@ export default {
     },
     indexUp(newValue) {
       this.$emit("updateIndexUp", newValue);
+      this.updateCanvasBorderSize();
     },
     resolutionUuid: {
       handler() {
@@ -169,12 +164,6 @@ export default {
       },
       deep: true,
     },
-    selectedRoomIndex:{
-    handler() {
-        this.updateCanvasBorderSize();
-    },
-    deep: true,
-  },
   },
   methods: {
     updateIndexUp(newValue) {
@@ -343,6 +332,7 @@ export default {
         this.$emit("updateTextBoxData", this.textBoxData);
         this.$emit("boxes", this.textBoxData);
         this.$emit("textBoxData", this.textBoxData)
+        this.updateCanvasBorderSize();
       });
 
       this.boxes = textBoxData;
@@ -376,18 +366,19 @@ export default {
         ctx.lineWidth = 1;
         ctx.lineCap = "butt";
       }
+      
       let template = this.$store.state.templates.find((t) => t.uuid === this.templateId);
-      if(this.selectedRoomIndex){
-        
-        let start = template.roomData[1] + (this.selectedRoomIndex - 1) * template.roomData[2];
-        let end = start + template.roomData[2];
-        ctx.fillStyle = "rgba(255, 192, 203, 0.5)"; 
-        ctx.fillRect(0, start, canvas.width, end - start);
-      }
-     // this.$emit("updateRoomData", this.template.roomData);
+     if(template){
+      let start = template.roomData[1];
+      let end = start + template.roomData[2];
+      ctx.fillStyle = "rgba(255, 192, 203, 0.5)"; 
+      ctx.fillRect(0, start, canvas.width, end - start);
+     }
+     
     },
 
     printTextBoxData() {
+      
       const textBoxData = this.boxes.map((box) => ({
         xPos: box.xPos,
         yPos: box.yPos,
@@ -408,13 +399,14 @@ export default {
       this.$emit("updateTextBoxData", textBoxData);
       this.$emit("textBoxData", textBoxData);
       this.$emit("boxes", this.textBoxData);
+      
+      
     },
 
     startDrag(index, event) {
       this.indexUp = index;
       if (!this.boxes[index].isRepeated) {
         this.isDragging = true;
-
         this.currentBoxIndex = index;
         this.startX = event.clientX - this.boxes[index].xPos;
         this.startY = event.clientY - this.boxes[index].yPos;

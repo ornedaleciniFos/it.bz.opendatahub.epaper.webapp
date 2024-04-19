@@ -1,9 +1,3 @@
-<!--
-SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
-
-SPDX-License-Identifier: AGPL-3.0-or-later
--->
-
 <template>
   <div>
     <h5>Text Box Data</h5>
@@ -35,6 +29,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <td>
               <select
                 v-model="box.fieldType"
+                :disabled="box.isRepeated"
                 style="width: 100%; font-size: 12px"
               >
                 <option value="LOCATION_NAME">LOCATION_NAME</option>
@@ -56,6 +51,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
                 </option>
                 <option value="LOGO">LOGO</option>
                 <option value="IMAGE">IMAGE</option>
+                <option value="OTHER">OTHER</option>
 
                 <!-- Add more options as needed -->
               </select>
@@ -64,6 +60,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
               <input
                 v-if="box.customText && box.customText !== 'img'"
                 v-model.number="box.fontSize"
+                :disabled="box.isRepeated"
                 type="number"
                 class="small-input"
               />
@@ -105,6 +102,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
               <input
                 v-if="box.customText && box.customText !== 'img'"
                 v-model="box.italic"
+                :disabled="box.isRepeated"
                 type="checkbox"
               />
               <input v-else disabled type="checkbox" />
@@ -113,12 +111,13 @@ SPDX-License-Identifier: AGPL-3.0-or-later
               <input
                 v-if="box.customText && box.customText !== 'img'"
                 v-model="box.bold"
+                :disabled="box.isRepeated"
                 type="checkbox"
               />
               <input v-else disabled type="checkbox" />
             </td>
             <td>
-              <input v-model="box.border" type="checkbox" />
+              <input v-model="box.border" :disabled="box.isRepeated" type="checkbox" />
             </td>
             <td>
               <input

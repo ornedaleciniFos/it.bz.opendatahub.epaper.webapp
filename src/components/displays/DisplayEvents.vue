@@ -7,28 +7,16 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 <template>
   <div>
     <div>
-      <b-button
-        :to="{
-          name: 'Display Schedule Form',
-          params: { displayUuid: displayUuid },
-        }"
-        class="mb-2 show_details"
-      >
-        Plan new content
-      </b-button>
-      <b-button variant="secondary" id="info-button2" class="mb-2 ml-1">
+      <b-button variant="secondary" id="info-button3" class="mb-2 ml-1">
         Info
       </b-button>
-      <b-popover target="info-button2" triggers="hover">
-        <template #title>Information about scheduled events</template>
+      <b-popover target="info-button3" triggers="hover">
+        <template #title>Information about events</template>
         <template #default>
-          The "Plan new content" button allows you to add a new event. You can
-          add a description, time, template(if it is one room display), or room
-          selection (if it is multiple room display). <br />
-          The "Preview details" button previews the display based on the
-          event.<br />
-          The "Edit" button allows modification of the event.<br />
-          The "Delete"" button deletes the event.
+         In this section you can find all events that have the permission to be included in the 
+         display with multiple events.<br />
+          The "Preview Details" button previews the original event.<br />
+          The "Add" button add the event as a new event for multiple event display.
         </template>
       </b-popover>
 
@@ -64,6 +52,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             }}
           </b-col>
         </template>
+
         <template v-slot:cell(options)="row">
           <b-button
             squared
@@ -76,28 +65,11 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           </b-button>
           <b-button
             squared
-            variant="warning"
-            @click="toggleEditForm(row.item)"
-            class="mr-2"
-          >
-            Edit
-          </b-button>
-          <b-button
-            v-if="row.item.eventId"
-            squared
-            :variant="row.item.disabled ? 'success' : 'danger'"
-            @click="disableEventClick(row.item)"
-            class="mr-2"
-          >
-            {{ row.item.disabled ? "Enable" : "Disable" }}
-          </b-button>
-          <b-button
-            squared
             variant="danger"
-            @click="deleteEventClick(row.item)"
-            class="mr-2"
+            @click="addForm(row.item)"
+            class="mr-2 added"
           >
-            Delete
+            Add
           </b-button>
         </template>
         <template v-slot:row-details="row">
@@ -150,8 +122,30 @@ export default {
   props: ["displayUuid"],
   computed: {
     scheduledContent() {
-      let displaySchedules =
-        this.$store.state.displaySchedules[this.displayUuid];
+      let display = this.$store.state.displays.find(
+        (d) => d.uuid === this.displayUuid,
+      );
+      let displaySchedules = [];
+      if (display.roomCodes.length > 1) {
+        for (const displays of this.$store.state.displays) {   
+          if (
+            displays.roomCodes.length == 1 && displays.uuid in this.$store.state.displaySchedules
+            //this.$store.state.displaySchedules.hasOwnProperty(displays.uuid)
+          ) {
+            const events = this.$store.state.displaySchedules[displays.uuid];
+            if (events) {
+              for (const event of events) {
+                if (display.roomCodes.includes(event.room) && event.include) {
+                  displaySchedules.push(event);
+                }
+              }
+            }
+          }
+        }
+      } else {
+        displaySchedules = this.$store.state.displaySchedules[this.displayUuid];
+      }
+
       if (displaySchedules)
         displaySchedules = displaySchedules.map((item) => {
           item._rowVariant = item.disabled ? "danger" : "";
@@ -177,48 +171,73 @@ export default {
     onEditFormComplete() {
       this.rowToEdit = null;
     },
-    toggleEditForm(item) {
-      this.rowToEdit = item;
+    editContent(item) {
+      let display = this.$store.state.displays.find(
+        (d) => d.uuid === this.displayUuid,
+      );
 
-      if (item) {
-        let display = this.$store.state.displays.find(
-          (d) => d.uuid === this.displayUuid,
+      let newData = [];
+      if (
+        item.displayContent &&
+        item.displayContent.imageFields &&
+        display.template.displayContent.imageFields
+      ) {
+        const start = display.template.roomData[1];
+        const end = start + display.template.roomData[2];
+        let boxes = display.template.displayContent.imageFields.filter(
+          (box) => box.yPos >= start && box.yPos <= end && box.isRepeated,
         );
-        let formProps = {};
-        if (display.roomCodes.length > 1) {
-          formProps = {
-            editMode: true,
-            eventId: item.eventId,
-            initialStartDate: item.startDate,
-            initialEndDate: item.endDate,
-            initialDescription: item.eventDescription,
-            initialTemplate: display.template.uuid,
-            displayUuid: this.displayUuid,
-            uuid: item.uuid,
-            initialOverride: item.override,
-            initialImageFields:
-              item.displayContent && item.displayContent.imageFields,
-            initialRoom: item.room,
-          };
-        } else {
-          formProps = {
-            editMode: true,
-            eventId: item.eventId,
-            initialStartDate: item.startDate,
-            initialEndDate: item.endDate,
-            initialDescription: item.eventDescription,
-            initialTemplate: item.templateId,
-            displayUuid: this.displayUuid,
-            uuid: item.uuid,
-            initialOverride: item.override,
-            initialImageFields:
-              item.displayContent && item.displayContent.imageFields,
-          };
-        }
+        item.displayContent.imageFields.forEach((itemBox) => {
+          let matched = false;
+          boxes.forEach((box) => {
+            if (box.fieldType === itemBox.fieldType) {
+              matched = true;
+              box.customText = itemBox.customText;
+              newData.push(box);
+            }
+          });
+          if (!matched) {
+            newData.push(itemBox);
+          }
+        });
+      }
+      let content = [];
+      for (let i = 0; i < newData.length; i++) {
+        const { uuid, ...imageFieldWithoutUUID } = newData[i];
+        // eslint-disable-next-line no-console
+        console.log(uuid);
+        content.push(imageFieldWithoutUUID);
+      }
+      return content;
+    },
 
-        this.$router.push({
-          name: "Display Schedule Form",
-          params: formProps,
+    addForm(item) {
+      this.rowToEdit = item;
+      const data = {
+        startDate: item.startDate,
+        endDate: item.endDate,
+        eventDescription: item.eventDescription,
+        override: item.override,
+        include: item.include,
+        room: item.room,
+      };
+      const { uuid } = this;
+      const imageFieldsContent = this.editContent(item);
+      const content = {
+        scheduledContentUuid: uuid,
+        displayContent: {
+          imageFields: imageFieldsContent,
+          imageBase64: item.displayContent.imageBase64,
+        },
+      };
+      if (item.displayUuid != this.displayUuid) {
+        data.displayUuid = this.displayUuid;
+        let storeOperation = "createDisplaySchedule";
+        this.$store.dispatch(storeOperation, data).then((data) => {
+          if (data) {
+            content.scheduledContentUuid = data.uuid;
+          }
+          return this.$store.dispatch("updateScheduledContent", content);
         });
       }
     },
@@ -241,7 +260,18 @@ export default {
   color: white;
   font-weight: bold;
 }
+
 .show_details:hover {
   background-color: #43a047; /* Change background color on hover */
+}
+
+.added {
+  background-color: #FFC300;
+  color: black;
+  font-weight: bold;
+}
+
+.added:hover {
+  background-color: red; /* Change background color on hover */
 }
 </style>

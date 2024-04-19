@@ -3,7 +3,6 @@ SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
-
 <template>
   <div class="canvas-container">
     <div class="canvas-wrapper">
@@ -197,7 +196,6 @@ export default {
     saveCanvas() {
       const canvas = this.$refs.canvasRef;
       const ctx = canvas.getContext("2d");
-
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -657,7 +655,6 @@ textarea {
 .canvas-border {
   position: relative;
   border: 2px solid #000;
-  overflow: hidden;
   margin: 0px;
 }
 

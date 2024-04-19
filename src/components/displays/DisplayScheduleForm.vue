@@ -11,7 +11,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         <b-card-text>
           <div class="row">
             <!-- Description input field -->
-            <div class="col-md-9">
+            <div class="col-md-6">
               <b-form-input
                 v-model="eventDescription"
                 label="Description"
@@ -23,6 +23,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <div class="col-md-2 d-flex align-items-center justify-content-end">
               <label class="mb-0 s">
                 <input type="checkbox" v-model="override" /> Override
+              </label>
+            </div>
+            <div class="col-md-3 d-flex align-items-center justify-content-end">
+              <label class="mb-0 s">
+                <input type="checkbox" v-model="include" /> Include to multiple
+                Screen
               </label>
             </div>
           </div>
@@ -148,7 +154,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 <script>
 import toastPresets from "@/utils/toastPresets.js";
 import ImagePreview from "@/components/displayContent/ImagePreview.vue";
-import DisplayDataTemplate from "@/components/displayContent/DisplayDataTemplate.vue";
+import DisplayDataTemplate from "@/components/displayContent/DisplayDataTemplate2.vue";
 import ImagePreview1 from "@/components/displayContent/ImagePreview1.vue";
 import DisplayDataTemplate1 from "@/components/displayContent/DisplayDataTemplate1.vue";
 
@@ -174,6 +180,7 @@ export default {
     uuid: String,
     initialImageFields: Array,
     initialOverride: Boolean,
+    initialInclude: Boolean,
     initialTemplate: String,
     initialRoom: String,
   },
@@ -215,7 +222,6 @@ export default {
     let display = this.$store.state.displays.find(
       (d) => d.uuid === this.displayUuid,
     );
-
     // Perform null check before accessing nested properties
     if (display && display.template) {
       let template = this.$store.state.templates.find(
@@ -223,7 +229,8 @@ export default {
       );
       if (template) {
         this.selectedTemplateId = template.uuid;
-        this.onSelectedRoomChange(template);
+        // this.onSelectedRoomChange(template);
+        this.onSelectedTemplateChange(template.uuid);
         if (template) {
           this.header = template.header;
           this.footer = template.footer;
@@ -242,6 +249,7 @@ export default {
       eventDescription: this.initialDescription,
       selectedTemplateId: this.initialTemplate,
       override: this.initialOverride || false,
+      include: this.initialInclude || false,
       image: null,
       imageFields: this.initialImageFields || [],
       textBoxData: this.initialImageFields || [],
@@ -305,29 +313,30 @@ export default {
       );
       return display.roomCodes.length == 1;
     },
+    checkForDuplicates() {
+      // If there are no "OTHER" fields, filter for duplicates
+      //if (otherFields.length === 0) {
+      const filteredTextBoxData = this.textBoxData.filter(
+        (imageField) =>
+          !(imageField.repeat && imageField.isRepeated) ||
+          !(!imageField.repeat && !imageField.isRepeated),
+      );
+
+      const duplicates = filteredTextBoxData.filter((imageField) => {
+        return (
+          filteredTextBoxData.filter(
+            (f) =>
+              f.fieldType !== "OTHER" && f.fieldType === imageField.fieldType,
+          ).length > 1
+        );
+      });
+      return duplicates.length === 0;
+    },
     handleTextBoxData(data) {
       this.textBoxData = data;
     },
     updateRoomTextBoxData() {
-      let display = this.$store.state.displays.find(
-        (d) => d.uuid === this.displayUuid,
-      );
-      // Perform null check before accessing nested properties
-      let template = this.$store.state.templates.find(
-        (t) => t.uuid === display.template.uuid,
-      );
-      if (this.selectedRoomIndex !== null) {
-        if (template && template.roomData.length >= 2) {
-          const start =
-            template.roomData[1] +
-            (this.selectedRoomIndex - 1) * template.roomData[2];
-          const end = start + template.roomData[2];
-          this.roomTextBoxData = this.textBoxData.filter(
-            (box) => box.yPos >= start && box.yPos < end,
-          );
-          this.$emit("roomTextBoxData", this.roomTextBoxData);
-        }
-      }
+     
     },
     handleRoomData(data) {
       this.roomTextBoxData = data;
@@ -348,96 +357,136 @@ export default {
       this.$refs.imagePrevieww.refreshImageCanvas();
     },
     submitSchedule() {
-      const {
-        startDate,
-        endDate,
-        eventDescription,
-        eventId,
-        displayUuid,
-        uuid,
-        override,
-        textBoxData,
-        selectedRoomIndex,
-      } = this;
-      let content = null;
-      if (selectedRoomIndex == null) {
-        content = {
+      if (this.checkForDuplicates()) {
+        const {
+          startDate,
+          endDate,
+          eventDescription,
+          eventId,
+          displayUuid,
+          uuid,
+          override,
+          include,
+          textBoxData,
+          //selectedRoomIndex,
+        } = this;
+        let display = this.$store.state.displays.find(
+                (d) => d.uuid === this.displayUuid,
+              );
+              if (display.roomCodes.length > 1) {
+                // Perform null check before accessing nested properties
+                let template = this.$store.state.templates.find(
+                  (t) => t.uuid === display.template.uuid,
+                );
+                if (template && template.multipleRoom) {
+                  const start = template.roomData[1];
+                  const end = start + template.roomData[2];
+                  this.textBoxData = this.textBoxData.filter(
+                    (box) => box.yPos >= start && box.yPos < end,
+                  );
+                  this.$emit("textBoxData", this.textBoxData);
+                }
+              }
+        let content = {
           scheduledContentUuid: uuid,
           displayContent: {
-            imageFields: textBoxData,
-            imageBase64: this.$refs.imagePrevieww.saveCanvas(),
+            imageFields: this.textBoxData, //roomdata
+            // imageBase64: this.$refs.imagePrevieww.saveCanvas(),
           },
         };
-      } else {
-        this.updateRoomTextBoxData();
-        content = {
-          scheduledContentUuid: uuid,
-          displayContent: {
-            imageFields: this.roomTextBoxData,
-            imageBase64: this.$refs.imagePreview1.saveCanvas(
-              this.roomTextBoxData,
-            ),
-          },
+
+        if (this.selectedRoomIndex) {
+          content.displayContent.imageBase64 =
+            this.$refs.imagePreview1.saveCanvas(textBoxData);
+        } else {
+          content.displayContent.imageBase64 =
+            this.$refs.imagePrevieww.saveCanvas();
+        }
+        let roomCodef = this.$store.state.rooms.find(
+          (r) => r.name === this.selectedRoom,
+        );
+
+        const data = {
+          startDate,
+          endDate,
+          eventDescription,
+          eventId,
+          displayUuid,
+          uuid,
+          override,
+          include,
         };
-      }
-
-      let roomCodef = this.$store.state.rooms.find(
-        (r) => r.name === this.selectedRoom,
-      );
-
-      const data = {
-        startDate,
-        endDate,
-        eventDescription,
-        eventId,
-        displayUuid,
-        uuid,
-        override,
-      };
-      if (roomCodef != null) {
-        data.room = roomCodef.code;
-      }
-
-      data.startDate.setHours(parseInt(this.startTime.substring(0, 2)));
-      data.startDate.setMinutes(parseInt(this.startTime.substring(3, 5)));
-
-      data.endDate.setHours(parseInt(this.endTime.substring(0, 2)));
-      data.endDate.setMinutes(parseInt(this.endTime.substring(3, 5)));
-
-      let storeOperation;
-      if (this.editMode) {
-        storeOperation = "updateDisplaySchedule";
-        data.uuid = uuid;
-      } else {
-        storeOperation = "createDisplaySchedule";
-      }
-      this.$store
-        .dispatch(storeOperation, data)
-        .then((data) => {
-          if (data) {
-            content.scheduledContentUuid = data.uuid;
-          }
-          return this.$store.dispatch("updateScheduledContent", content);
-        })
-        .then(() => this.$emit("completed"))
-        .then(() => this.$router.replace("displays"))
-        .catch(() => {
-          this.$bvToast.toast(
-            "Failed to save scheduled content",
-            toastPresets.errorMessage,
+        if (roomCodef != null) {
+          data.room = roomCodef.code;
+        } else {
+          let display = this.$store.state.displays.find(
+            (d) => d.uuid === this.displayUuid,
           );
-        });
+          data.room = display.roomCodes[0];
+        }
+
+        data.startDate.setHours(parseInt(this.startTime.substring(0, 2)));
+        data.startDate.setMinutes(parseInt(this.startTime.substring(3, 5)));
+
+        data.endDate.setHours(parseInt(this.endTime.substring(0, 2)));
+        data.endDate.setMinutes(parseInt(this.endTime.substring(3, 5)));
+        let storeOperation;
+        if (this.editMode) {
+          storeOperation = "updateDisplaySchedule";
+          data.uuid = uuid;
+        } else {
+          storeOperation = "createDisplaySchedule";
+        }
+        this.$store
+          .dispatch(storeOperation, data)
+          .then((data) => {
+            if (data) {
+              content.scheduledContentUuid = data.uuid;
+            }
+            return this.$store.dispatch("updateScheduledContent", content);
+          })
+          .then(() => this.$emit("completed"))
+          .then(() => this.$router.replace("displays"))
+          .catch(() => {
+            this.$bvToast.toast(
+              "Failed to save scheduled content",
+              toastPresets.errorMessage,
+            );
+          });
+      } else {
+        this.$bvToast.toast(
+          "Duplicate text field found",
+          toastPresets.errorMessage,
+        );
+        return;
+      }
     },
     onSelectedTemplateChange(value) {
-      let template = this.templates.find((t) => t.uuid === value);
+      let template = this.$store.state.templates.find((t) => t.uuid === value);
       //this.$emit("selectedTemplateId", value)
       let newData = [];
       if (template) {
-        newData.push(...this.textBoxData);
-        newData.push(
-          ...(template.displayContent &&
-            template.displayContent.imageFields.map((f) => ({ ...f }))),
+        // First, filter the image fields of the template where !isRepeated
+
+        const filteredTemplateFields = template.displayContent.imageFields.filter(
+          (f) =>
+            (f.yPos >= template.roomData[1] &&
+            f.yPos <= template.roomData[1] + template.roomData[2]) || !f.isRepeated,
         );
+    // Push elements from `this.textBoxData` and filtered `template.displayContent.imageFields` to `newData`
+    newData.push(
+        ...this.textBoxData,
+        ...filteredTemplateFields.filter(field =>
+            // Filter out elements where x, y, width, or height are not equal
+            !this.textBoxData.some(textBox =>
+                textBox.xPos === field.xPos &&
+                textBox.yPos === field.yPos &&
+                textBox.width === field.width &&
+                textBox.height === field.height
+            )
+        )
+    );
+
         this.handleTextBoxData(newData);
         this.textBoxData = newData;
         this.$emit("updateTextBoxData", newData);

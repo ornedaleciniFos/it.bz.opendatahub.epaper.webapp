@@ -1,9 +1,3 @@
-<!--
-SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
-
-SPDX-License-Identifier: AGPL-3.0-or-later
--->
-
 <template>
   <div>
     <h5>Text Box Data</h5>
@@ -35,6 +29,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <td>
               <select
                 v-model="box.fieldType"
+                :disabled="box.isRepeated"
                 style="width: 100%; font-size: 12px"
               >
                 <option value="LOCATION_NAME">LOCATION_NAME</option>
@@ -56,6 +51,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
                 </option>
                 <option value="LOGO">LOGO</option>
                 <option value="IMAGE">IMAGE</option>
+                <option value="OTHER">OTHER</option>
 
                 <!-- Add more options as needed -->
               </select>
@@ -64,6 +60,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
               <input
                 v-if="box.customText && box.customText !== 'img'"
                 v-model.number="box.fontSize"
+                :disabled="box.isRepeated"
                 type="number"
                 class="small-input"
               />
@@ -72,7 +69,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <td>
               <input
                 v-model.number="box.xPos"
-                :disabled="box.isRepeated || (box.repeat && !box.isRepeated)"
+                :disabled="box.isRepeated"
                 type="number"
                 class="small-input"
               />
@@ -80,7 +77,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <td>
               <input
                 v-model.number="box.yPos"
-                :disabled="box.isRepeated || (box.repeat && !box.isRepeated)"
+                :disabled="box.isRepeated"
                 type="number"
                 class="small-input"
               />
@@ -88,7 +85,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <td>
               <input
                 v-model.number="box.width"
-                :disabled="box.isRepeated || (box.repeat && !box.isRepeated)"
+                :disabled="box.isRepeated"
                 type="number"
                 class="small-input"
               />
@@ -96,7 +93,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <td>
               <input
                 v-model.number="box.height"
-                :disabled="box.isRepeated || (box.repeat && !box.isRepeated)"
+                :disabled="box.isRepeated"
                 type="number"
                 class="small-input"
               />
@@ -105,6 +102,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
               <input
                 v-if="box.customText && box.customText !== 'img'"
                 v-model="box.italic"
+                :disabled="box.isRepeated"
                 type="checkbox"
               />
               <input v-else disabled type="checkbox" />
@@ -113,12 +111,13 @@ SPDX-License-Identifier: AGPL-3.0-or-later
               <input
                 v-if="box.customText && box.customText !== 'img'"
                 v-model="box.bold"
+                :disabled="box.isRepeated"
                 type="checkbox"
               />
               <input v-else disabled type="checkbox" />
             </td>
             <td>
-              <input v-model="box.border" type="checkbox" />
+              <input v-model="box.border" :disabled="box.isRepeated" type="checkbox" />
             </td>
             <td>
               <input
@@ -146,19 +145,11 @@ export default {
   props: {
     textBoxData: Array,
     updateTextBoxData: Function,
-    handleRoomdata: Function,
-    roomTextBoxData: Array,
     indexUp: Number,
     room: Number,
-    selectedRoomIndex: Number,
-    templateId: String,
   },
   computed: {
     filteredTextBoxData() {
-      if (this.selectedRoomIndex !== null) {
-        // Call the isEditable method here to filter out items based on editability
-        return this.textBoxData.filter((box, index) => this.isEditable(index));
-      }
       return this.textBoxData;
     },
   },
@@ -167,22 +158,12 @@ export default {
       handler() {
         this.updateTextData();
       },
-      deep: true, // Watch changes deeply in the array
-    },
-    selectedRoomIndex: {
-      handler(val) {
-        this.$emit("selectedRoomIndex", val);
-        this.filteredTextBoxData;
-      },
       deep: true,
     },
   },
   methods: {
     updateTextData() {
       this.$emit("updateTextBoxData", this.textBoxData);
-      const roomTextBoxData =
-        this.selectedRoomIndex !== null ? this.filteredTextBoxData : [];
-      this.$emit("roomTextBoxData", roomTextBoxData);
     },
     deleteTextBox(index) {
       if (confirm("Are you sure you want to delete this text box?")) {
@@ -193,31 +174,6 @@ export default {
       this.$emit("boxes", this.textBoxData);
       this.$emit("updateTextBoxData", this.textBoxData);
       this.$emit("textBoxData", this.textBoxData);
-    },
-    isEditable(index) {
-      const template = this.$store.state.templates.find(
-        (t) => t.uuid === this.templateId,
-      );
-
-      if (
-        this.selectedRoomIndex !== null &&
-        template &&
-        template.roomData.length >= 2
-      ) {
-        let start =
-          template.roomData[1] +
-          (this.selectedRoomIndex - 1) * template.roomData[2];
-        let end = start + template.roomData[2];
-        const isWithinRange =
-          this.textBoxData[index].yPos >= start &&
-          this.textBoxData[index].yPos < end;
-        return (
-          (this.textBoxData[index].isRepeat === false &&
-            this.textBoxData[index].isRepeated === false) ||
-          isWithinRange
-        );
-      }
-      return false;
     },
   },
 };
@@ -240,10 +196,9 @@ export default {
   background-color: #f2f2f2;
 }
 .small-input {
-  width: 50px; /* Adjust the width as needed */
-  /* Add any other styling you want for small inputs */
+  width: 70px;
 }
 .active-row {
-  background-color: #808080; /* Set your desired background color for the active row */
+  background-color: #808080;
 }
 </style>

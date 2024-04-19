@@ -100,7 +100,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           :class="{ invertedImage: display.inverted }"
           :src="`${apiUrl}/display/get-image/${
             display.uuid
-          }?withTextFields=true&x=${Date.now()}`"
+          }?x=${Date.now()}`"
           fluid
           alt="No image displayed"
         />

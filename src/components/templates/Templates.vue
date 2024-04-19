@@ -131,10 +131,14 @@ export default {
         .then((okPressed) => {
           if (okPressed)
             this.$store.dispatch("deleteTemplate", template).catch(() => {
-              this.$bvToast.toast(
+            this.$bvToast.toast(
                 "Failed to delete template",
                 toastPresets.errorMessage
               );
+            this.$bvToast.toast(
+                    "Template may be attached to a display",
+                    toastPresets.errorMessage
+                  );
             });
         });
     },
