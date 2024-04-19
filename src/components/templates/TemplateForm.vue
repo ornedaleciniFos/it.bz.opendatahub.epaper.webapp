@@ -106,7 +106,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 <script>
 import toastPresets from "@/utils/toastPresets.js";
 import ImagePreview from "@/components/displayContent/ImagePreview.vue";
-import DisplayDataTemplate from "@/components/displayContent/DisplayDataTemplate.vue";
+import DisplayDataTemplate from "@/components/displayContent/DisplayDataTemplate1.vue";
 
 export default {
   props: {
