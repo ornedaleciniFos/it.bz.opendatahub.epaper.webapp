@@ -76,7 +76,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <script>
 import DisplayInformation from "./DisplayInformation.vue";
-import DisplaySchedule from "./DisplaySchedule1.vue";
+import DisplaySchedule from "./DisplaySchedule.vue";
 import DisplayEvents from "./DisplayEvents.vue";
 
 export default {

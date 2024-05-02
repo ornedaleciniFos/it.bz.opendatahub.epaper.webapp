@@ -88,7 +88,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         <b-card v-if="roomCodes && roomCodes.length > 1">
           <b-card-text>
             <div>
-              <DisplayDataTemplate1
+              <ImageFieldTemplate1
                 :textBoxData="textBoxData"
                 @updateTextBoxData="handleTextBoxData"
                 :roomTextBoxData="roomTextBoxData"
@@ -104,7 +104,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         <b-card v-else>
           <b-card-text>
             <div>
-              <DisplayDataTemplate
+              <ImageFieldTemplate2
                 :textBoxData="textBoxData"
                 @updateTextBoxData="handleTextBoxData"
                 :indexUp="indexUp"
@@ -154,9 +154,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 <script>
 import toastPresets from "@/utils/toastPresets.js";
 import ImagePreview from "@/components/displayContent/ImagePreview.vue";
-import DisplayDataTemplate from "@/components/displayContent/DisplayDataTemplate2.vue";
+import ImageFieldTemplate2 from "@/components/displayContent/ImageFieldTemplate2.vue";
 import ImagePreview1 from "@/components/displayContent/ImagePreview1.vue";
-import DisplayDataTemplate1 from "@/components/displayContent/DisplayDataTemplate1.vue";
+import ImageFieldTemplate1 from "@/components/displayContent/ImageFieldTemplate1.vue";
 
 export default {
   props: {
@@ -186,9 +186,9 @@ export default {
   },
   components: {
     ImagePreview,
-    DisplayDataTemplate,
+    ImageFieldTemplate2,
     ImagePreview1,
-    DisplayDataTemplate1,
+    ImageFieldTemplate1,
   },
   watch: {
     textBoxData: {
@@ -248,6 +248,7 @@ export default {
       endTime: this.initialEndDate.toTimeString().substring(0, 5),
       eventDescription: this.initialDescription,
       selectedTemplateId: this.initialTemplate,
+      templateId: this.initialTemplate,
       override: this.initialOverride || false,
       include: this.initialInclude || false,
       image: null,

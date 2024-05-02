@@ -63,7 +63,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             </div>
           </div>
 
-          <DisplayDataTemplate
+          <ImageFieldTemplate
             :textBoxData="textBoxData"
             @updateTextBoxData="handleTextBoxData"
             :indexUp="indexUp"
@@ -106,7 +106,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 <script>
 import toastPresets from "@/utils/toastPresets.js";
 import ImagePreview from "@/components/displayContent/ImagePreview.vue";
-import DisplayDataTemplate from "@/components/displayContent/DisplayDataTemplate1.vue";
+import ImageFieldTemplate from "@/components/displayContent/ImageFieldTemplate.vue";
 
 export default {
   props: {
@@ -126,7 +126,7 @@ export default {
   },
   components: {
     ImagePreview,
-    DisplayDataTemplate,
+    ImageFieldTemplate,
   },
   data() {
     return {

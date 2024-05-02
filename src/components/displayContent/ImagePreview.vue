@@ -160,7 +160,7 @@ export default {
     selectedTemplateId: {
       handler() {
         let template = this.$store.state.templates.find(
-          (t) => t.uuid === this.selectedTemplateId,
+          (t) => t.uuid === this.selectedTemplateId
         );
 
         if (
@@ -202,7 +202,7 @@ export default {
       this.boxes.forEach((box) => {
         if (box.customText === "img") {
           const image = new Image();
-          image.src = box.image; 
+          image.src = box.image;
           ctx.drawImage(image, box.xPos, box.yPos, box.width, box.height);
           if (box.border) {
             ctx.strokeStyle = "#000000";
@@ -213,12 +213,14 @@ export default {
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(box.xPos, box.yPos, box.width, box.height);
           ctx.fillStyle = "#000000";
-          ctx.font = `${box.italic ? "italic" : ""} ${box.bold ? "bold" : ""} ${box.fontSize}px sans-serif`;
+          ctx.font = `${box.italic ? "italic" : ""} ${box.bold ? "bold" : ""} ${
+            box.fontSize
+          }px sans-serif`;
           const lines = box.customText.split("\n");
           let offsetY = 0;
           lines.forEach((line) => {
             ctx.fillText(line, box.xPos, box.yPos + offsetY + box.fontSize);
-            offsetY += box.fontSize * 1.2; 
+            offsetY += box.fontSize * 1.2;
           });
           if (box.border) {
             ctx.strokeStyle = "#000000";
@@ -294,7 +296,7 @@ export default {
     },
     getResolution() {
       const resolution = this.$store.state.resolutions.find(
-        (r) => r.uuid === this.resolutionUuid,
+        (r) => r.uuid === this.resolutionUuid
       );
       const canvas = this.$refs.canvasRef;
       if (canvas && resolution) {
@@ -372,7 +374,7 @@ export default {
       const numLines = 5;
       let lineHeight = canvas.height / (numLines + 1);
       this.boxes = this.boxes.filter(
-        (box) => box.yPos + box.height <= canvas.height,
+        (box) => box.yPos + box.height <= canvas.height
       );
       let marginTop = 0;
       let marginBottom = 0;
@@ -606,7 +608,6 @@ button {
   height: 100%;
   border: 1px dashed #000;
   white-space: pre-wrap;
-  /* Set the border to dashed style */
 }
 
 textarea {
