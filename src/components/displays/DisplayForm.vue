@@ -228,6 +228,7 @@ export default {
         ),
         template: temp,
       };
+      
       let storeOperation;
       if (this.editMode) {
         storeOperation = "updateDisplay";

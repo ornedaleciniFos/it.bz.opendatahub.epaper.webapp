@@ -466,26 +466,28 @@ export default {
       let template = this.$store.state.templates.find((t) => t.uuid === value);
       //this.$emit("selectedTemplateId", value)
       let newData = [];
-      if (template) {
+      if (template && template.displayContent && template.displayContent.imageFields ) {
         // First, filter the image fields of the template where !isRepeated
 
         const filteredTemplateFields = template.displayContent.imageFields.filter(
           (f) =>
             (f.yPos >= template.roomData[1] &&
-            f.yPos <= template.roomData[1] + template.roomData[2]) || !f.isRepeated,
+            f.yPos <= template.roomData[1] + template.roomData[2]) && f.isRepeated,
         );
+        
+        const newFields= filteredTemplateFields.filter(field =>
+        // Filter out elements where x, y, width, or height are not equal
+        !this.textBoxData.some(textBox =>
+            textBox.xPos === field.xPos &&
+            textBox.yPos === field.yPos &&
+            textBox.width === field.width &&
+            textBox.height === field.height
+        )
+    );
     // Push elements from `this.textBoxData` and filtered `template.displayContent.imageFields` to `newData`
     newData.push(
         ...this.textBoxData,
-        ...filteredTemplateFields.filter(field =>
-            // Filter out elements where x, y, width, or height are not equal
-            !this.textBoxData.some(textBox =>
-                textBox.xPos === field.xPos &&
-                textBox.yPos === field.yPos &&
-                textBox.width === field.width &&
-                textBox.height === field.height
-            )
-        )
+        ...newFields
     );
 
         this.handleTextBoxData(newData);
@@ -498,9 +500,9 @@ export default {
       if (template) {
         let newData = [];
         newData.push(...this.textBoxData);
-
+        
         if (template.displayContent && template.displayContent.imageFields) {
-          template.displayContent.imageFields.forEach((field) => {
+                 template.displayContent.imageFields.forEach((field) => {
             let exists = this.textBoxData.some((textBox) => {
               return (
                 textBox.xPos === field.xPos &&

@@ -23,6 +23,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           ref="canvasRef"
           :width="canvasWidth + 'px'"
           :height="canvasHeight + 'px'"
+           style="overflow: auto" 
         ></canvas>
         <div
           v-for="(box, index) in boxes"
@@ -88,7 +89,7 @@ export default {
     header: Boolean,
     footer: Boolean,
     multipleRoom: Boolean,
-    selectedTemplateId: Number,
+    selectedTemplateId: String,
   },
   data() {
     return {
