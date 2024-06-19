@@ -55,20 +55,20 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         <b-tab lazy title="Information">
           <DisplayInformation lazy :display="selectedDisplay" />
         </b-tab>
-        <b-tab title="Scheduler">
+        <b-tab title="Scheduler" @click=showToast() >
           <DisplaySchedule
             lazy
             :scheduled-content="selectedDisplay.scheduledContent"
             :display-uuid="selectedDisplay.uuid"
           />
         </b-tab>
-        <b-tab v-if="selectedDisplay.roomCodes && selectedDisplay.roomCodes.length > 1" title="Events">
+       <!--  <b-tab v-if="selectedDisplay.roomCodes && selectedDisplay.roomCodes.length > 1" title="Events">
           <DisplayEvents
             lazy
             :scheduled-content="selectedDisplay.scheduledContent"
             :display-uuid="selectedDisplay.uuid"
           />
-       </b-tab>
+       </b-tab>-->
       </b-tabs>
     </b-modal>
   </div>
@@ -77,13 +77,11 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 <script>
 import DisplayInformation from "./DisplayInformation.vue";
 import DisplaySchedule from "./DisplaySchedule.vue";
-import DisplayEvents from "./DisplayEvents.vue";
 
 export default {
   components: {
     DisplayInformation,
     DisplaySchedule,
-    DisplayEvents,
   },
   props: {
     // --- These props are used in QR code link ---
@@ -151,6 +149,26 @@ export default {
         return item;
       });
     },
+    scheduledContent() {
+        let displaySchedules =
+        this.$store.state.displaySchedules[this.displayUuid];
+      if (displaySchedules)
+        displaySchedules = displaySchedules.map((item) => {
+          item._rowVariant = item.disabled ? "danger" : "";
+          item.startDate = new Date(item.startDate);
+          item.endDate = new Date(item.endDate);
+          if (item.eventId) {
+            item.originalStartDate = new Date(item.startDate);
+            item.originalEndDate = new Date(item.endDate);
+          }
+          item.primaryKey = item.uuid || item.eventId;
+          return item;
+        });
+      return displaySchedules;
+    },
+    isUpdated() {
+        return this.$store.state.updated && this.$store.state.updated.updated;
+      },
   },
   created() {
     this.LOW_BATTERY_THRESHOLD = 10;
@@ -195,6 +213,11 @@ export default {
       this.selectedDisplay = display;
       this.$bvModal.show("details-modal");
     },
+    showToast() {
+          if (!this.isUpdated) {
+            this.$bvModal.hide('details-modal');
+          }
+        },
   },
 };
 </script>

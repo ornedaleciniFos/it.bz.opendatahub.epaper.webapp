@@ -45,6 +45,11 @@ SPDX-License-Identifier: AGPL-3.0-or-later
               </div>
               <div class="right-content">
                 <b-card v-if="resolutionUuid">
+                
+                    <label>
+                      <input type="checkbox" v-model="invert" /> Invert
+                    </label>
+                    <br>
                   <label>
                     <input type="checkbox" v-model="multipleRoom" /> Multiple
                     Room
@@ -84,6 +89,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           :multipleRoom="multipleRoom"
           :header="header"
           :footer="footer"
+          :invert="invert"
           :indexUp="indexUp"
           @updateIndexUp="updateIndexUp"
           :roomData="roomData"
@@ -118,6 +124,7 @@ export default {
     initialResolution: Object,
     initialFooter: Boolean,
     initialHeader: Boolean,
+    initialInvert: Boolean,
     initialMultipleRoom: Boolean,
     initialRoomData: {
       type: Array,
@@ -144,6 +151,7 @@ export default {
       numRooms: this.initialRoomData[0] || 1,
       header: this.initialHeader || false,
       footer: this.initialFooter || false,
+      invert: this.initialInvert || false,
       roomData: this.initialRoomData || [],
       indexUp: null,
       room: 1,
@@ -202,7 +210,10 @@ export default {
       deep: true,
       handler() {},
     },
-
+    invert: {
+        deep: true,
+        handler() {},
+      },
     imageFields: {
       deep: true,
       handler() {
@@ -272,6 +283,7 @@ export default {
           templateId,
           textBoxData,
           footer,
+          invert,
           header,
           roomData,
           numRooms,
@@ -285,6 +297,11 @@ export default {
           templateUuid: templateId,
         };
         this.$set(roomData, 0, numRooms);
+        if(invert){
+           this.$set(roomData, roomData.length, 1);
+        }else{
+          this.$set(roomData, roomData.length, 0);
+        }
         const template = {
           name,
           description,

@@ -88,10 +88,13 @@ const router = new Router({
   ],
 });
 
+
 router.beforeEach((to, from, next) => {
   if (to.meta.isAuthenticated) {
+     
     if (!Vue.$keycloak.authenticated) {
       // The page is protected and the user is not authenticated. Redirect to login.
+      //alert(JSON.stringify({encodeURIComponent(window.location.pathname + window.location.search)}))
       next(`/login${window.location.pathname !== '/' ? `?redirectPath=${encodeURIComponent(window.location.pathname + window.location.search)}` : ''}`);
     } else if (Vue.$keycloak.hasResourceRole('admin', process.env.VUE_APP_KEYCLOAK_RESOURCE_CLIENT_ID)) {
       // The user was authenticated, and has the app role

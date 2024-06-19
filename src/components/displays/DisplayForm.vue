@@ -1,8 +1,3 @@
-<!--
-SPDX-FileCopyrightText: NOI Techpark <digital@noi.bz.it>
-
-SPDX-License-Identifier: AGPL-3.0-or-later
--->
 <template>
   <b-card :title="pageTitle">
     <b-card-text>
@@ -63,7 +58,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
                     class="d-flex mb-2"
                   >
                     <div class="handle pr-2" style="cursor: grab">
-                      ☰ {{ selectedRoom.text }}
+                      {{ selectedRoom.text }}
                     </div>
                   </div>
                 </div>
@@ -85,7 +80,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           required
         >
           <template v-slot:first>
-            <b-form-select-option :value="null" disabled
+            <b-form-select-option :value="null"
               >Select template...</b-form-select-option
             >
           </template>
@@ -125,10 +120,10 @@ export default {
         : null,
       templateUuid: this.display.template ? this.display.template.uuid : null,
       locationUuid: this.display.locationUuid || null,
-      roomCodes: this.initialRoomCodes,
+      roomCodes: this.display.roomCodes ? [...this.display.roomCodes] : [],
       roomDropdown: false,
-      roomOptions: [],
-      sortedRoomsArray: [],
+      roomOptions: this.display.roomCodes ? [...this.display.roomCodes] : [],
+      sortedRoomsArray: this.display.roomCodes ? [...this.display.roomCodes] : [],
       sortable: null,
     };
   },
@@ -137,7 +132,7 @@ export default {
       return this.$store.state.rooms;
     },
     enableTemplateSection() {
-      return this.resolutionUuid !== null && this.roomCodes.length > 1;
+      return this.resolutionUuid !== null && this.roomCodes.length > 0;
     },
     resolutions() {
       return this.$store.state.resolutions.map((r) => {
@@ -150,13 +145,19 @@ export default {
     templates() {
       return this.$store.state.templates
         .filter((t) => {
-          if (Array.isArray(t.roomData) && t.roomData.length > 0) {
+          if (this.roomCodes.length == 1) {
+            return (
+              t.roomData[0] == this.roomCodes.length &&
+              t.resolution.uuid === this.resolutionUuid
+            );
+          } else if (this.roomCodes.length > 1) {
             return (
               t.roomData[0] >= this.roomCodes.length &&
               t.resolution.uuid === this.resolutionUuid
             );
+          } else {
+            return false;
           }
-          return false;
         })
         .map((t) => ({
           value: t.uuid,
@@ -176,9 +177,9 @@ export default {
       }));
     },
     sortedSelectedRooms() {
-      return this.sortedRoomOptions
-        .filter((option) => option.selected)
-        .sort((a, b) => a.position - b.position);
+      return this.roomCodes.map((code) =>
+        this.sortedRoomOptions.find((option) => option.value === code)
+      );
     },
   },
   watch: {
@@ -193,17 +194,15 @@ export default {
       },
       immediate: true,
     },
+    roomCodes(newVal) {
+      this.sortedRoomsArray = [...newVal];
+    }
   },
   methods: {
     handleDragEnd({ newIndex, oldIndex }) {
       if (newIndex !== oldIndex) {
-        const draggedRoom = this.sortedSelectedRooms.splice(oldIndex, 1)[0];
-        this.sortedSelectedRooms.splice(newIndex, 0, draggedRoom);
-
-        // Update the positions in sortedRoomsArray based on the new order
-        this.sortedRoomsArray = this.sortedSelectedRooms.map(
-          (room) => room.value,
-        );
+        const draggedRoom = this.sortedRoomsArray.splice(oldIndex, 1)[0];
+        this.sortedRoomsArray.splice(newIndex, 0, draggedRoom);
       }
     },
     submitDisplay() {
@@ -215,20 +214,25 @@ export default {
       if (templateUuid !== null) {
         temp = this.$store.state.templates.find((t) => t.uuid === templateUuid);
       }
+
       const data = {
         ...display,
         name,
         uuid,
-        roomCodes:
-          this.sortedRoomsArray.length !== 0
-            ? this.sortedRoomsArray
-            : roomCodes,
+        roomCodes: [...this.sortedRoomsArray],
         resolution: this.$store.state.resolutions.find(
-          (r) => r.uuid === resolutionUuid,
+          (r) => r.uuid === resolutionUuid
         ),
         template: temp,
       };
-      
+      if (this.sortedRoomsArray.length==0) {
+          this.$bvToast.toast("There should be at least one room must be assigned to the display", {
+            title: "Error",
+            variant: "danger",
+            solid: true,
+          });
+          return;
+        }
       let storeOperation;
       if (this.editMode) {
         storeOperation = "updateDisplay";
@@ -242,7 +246,7 @@ export default {
         .catch((err) => {
           this.$bvToast.toast(
             "Failed to save display " + err,
-            toastPresets.errorMessage,
+            toastPresets.errorMessage
           );
         });
     },
@@ -252,7 +256,7 @@ export default {
 
       this.sortable = new Sortable(el, {
         handle: ".handle",
-        onUpdate: this.handleDragEnd,
+        onEnd: this.handleDragEnd,
       });
     },
   },

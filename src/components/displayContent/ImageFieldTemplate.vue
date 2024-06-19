@@ -12,14 +12,15 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           <tr>
             <th>ID</th>
             <th>Field</th>
-            <th>Font Size</th>
+            <th>Font Sizee</th>
             <th>X</th>
             <th>Y</th>
             <th>W</th>
             <th>H</th>
-            <th>𝐼talic</th>
-            <th>𝐁old</th>
+            <th>Italic</th>
+            <th>Bold</th>
             <th>Border</th>
+            <th>Invert</th>
             <th :disabled="room < 2">Repeat</th>
             <th>Option</th>
           </tr>
@@ -64,7 +65,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <td>
               <input
                 v-if="box.customText && box.customText !== 'img'"
-                v-model.number="box.fontSize"
+                v-model.number="box.fontSize "
                 :disabled="box.isRepeated"
                 type="number"
                 class="small-input"
@@ -73,7 +74,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             </td>
             <td>
               <input
-                v-model.number="box.xPos"
+                v-model.number="box.xPos "
                 :disabled="box.isRepeated"
                 type="number"
                 class="small-input"
@@ -97,7 +98,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             </td>
             <td>
               <input
-                v-model.number="box.height"
+                v-model.number="box.height "
                 :disabled="box.isRepeated"
                 type="number"
                 class="small-input"
@@ -123,6 +124,15 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             </td>
             <td>
               <input v-model="box.border" :disabled="box.isRepeated" type="checkbox" />
+            </td>
+            <td>
+              <input
+                v-if="box.customText && box.customText !== 'img'"
+                v-model="box.invert"
+                :disabled="box.isRepeated"
+                type="checkbox"
+              />
+              <input v-else disabled type="checkbox" />
             </td>
             <td>
               <input

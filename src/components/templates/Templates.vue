@@ -116,6 +116,7 @@ export default {
           templateId: template.uuid,
           initialMultipleRoom: template.multipleRoom,
           initialFooter: template.footer,
+          initialInvert: template.roomData[3]==1?true:false,
           initialHeader:template.header,
           initialRoomData: template.roomData||[],
           initialNumRooms: template.roomData[0]||1,
@@ -132,13 +133,9 @@ export default {
           if (okPressed)
             this.$store.dispatch("deleteTemplate", template).catch(() => {
             this.$bvToast.toast(
-                "Failed to delete template",
+                "Failed to delete template since it is attached to another display",
                 toastPresets.errorMessage
               );
-            this.$bvToast.toast(
-                    "Template may be attached to a display",
-                    toastPresets.errorMessage
-                  );
             });
         });
     },

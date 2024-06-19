@@ -25,12 +25,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
                 <input type="checkbox" v-model="override" /> Override
               </label>
             </div>
-            <div class="col-md-3 d-flex align-items-center justify-content-end">
+           <!--  <div class="col-md-3 d-flex align-items-center justify-content-end">
               <label class="mb-0 s">
                 <input type="checkbox" v-model="include" /> Include to multiple
                 Screen
               </label>
-            </div>
+            </div>-->
           </div>
           <b-form-group label="From date and time:" class="form_group">
             <div class="d-flex h-auto">
@@ -51,24 +51,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             </div>
           </b-form-group>
         </b-card-text>
-        <b-form-group
-          v-if="!shouldShowTemplateSection"
-          label="Choose a template:"
-          class="form_group"
-          description="Choosing a different template will override existing picture and fields"
-        >
-          <b-form-select
-            v-model="selectedTemplateId"
-            value-field="uuid"
-            text-field="name"
-            :options="templates"
-            @input="onSelectedTemplateChange"
-          >
-          </b-form-select>
-        </b-form-group>
 
         <b-form-group
-          v-else
+          v-if="shouldShowRoomSection"
           label="Choose a room"
           class="form_group"
           description="Choosing one of the rooms of the display"
@@ -95,8 +80,6 @@ SPDX-License-Identifier: AGPL-3.0-or-later
                 @handleRoomData="handleRoomData"
                 :indexUp="indexUp"
                 ref="displayDataTemplate"
-                :selectedRoomIndex="selectedRoomIndex"
-                :templateId="selectedTemplateId"
               />
             </div>
           </b-card-text>
@@ -104,7 +87,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         <b-card v-else>
           <b-card-text>
             <div>
-              <ImageFieldTemplate2
+              <ImageFieldSchedule
                 :textBoxData="textBoxData"
                 @updateTextBoxData="handleTextBoxData"
                 :indexUp="indexUp"
@@ -123,20 +106,18 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           :indexUp="indexUp"
           @updateIndexUp="updateIndexUp"
           :roomData="roomData"
-          :selectedRoomIndex="selectedRoomIndex"
-          :templateId="selectedTemplateId"
+          :templateId="templateUuid"
           ref="imagePreview1"
         />
       </b-card>
       <b-card v-else class="imagePrevieww">
         Display preview
-        <ImagePreview
+        <ImagePreviewSchedule
           @updateTextBoxData="handleTextBoxData"
           :resolutionUuid="resolutionUuid"
           :textBoxData="textBoxData"
           :indexUp="indexUp"
           @updateIndexUp="updateIndexUp"
-          :selectedTemplateId="selectedTemplateId"
           :roomData="roomData"
           ref="imagePrevieww"
         />
@@ -153,8 +134,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 <script>
 import toastPresets from "@/utils/toastPresets.js";
-import ImagePreview from "@/components/displayContent/ImagePreview.vue";
-import ImageFieldTemplate2 from "@/components/displayContent/ImageFieldTemplate2.vue";
+import ImagePreviewSchedule from "@/components/displayContent/ImagePreviewSchedule.vue";
+import ImageFieldSchedule from "@/components/displayContent/ImageFieldSchedule.vue";
 import ImagePreview1 from "@/components/displayContent/ImagePreview1.vue";
 import ImageFieldTemplate1 from "@/components/displayContent/ImageFieldTemplate1.vue";
 
@@ -185,8 +166,8 @@ export default {
     initialRoom: String,
   },
   components: {
-    ImagePreview,
-    ImageFieldTemplate2,
+    ImagePreviewSchedule,
+    ImageFieldSchedule,
     ImagePreview1,
     ImageFieldTemplate1,
   },
@@ -201,35 +182,20 @@ export default {
       deep: true,
       handler() {},
     },
-    imageFields: {
-      deep: true,
-      handler() {
-        //this.refreshImagePreview();
-      },
-    },
     indexUp: {
       deep: true,
       handler() {},
-    },
-    selectedTemplateId: {
-      handler(value) {
-        this.selectedTemplateId = value;
-      },
-      deep: true,
     },
   },
   mounted() {
     let display = this.$store.state.displays.find(
       (d) => d.uuid === this.displayUuid,
     );
-    // Perform null check before accessing nested properties
     if (display && display.template) {
       let template = this.$store.state.templates.find(
         (t) => t.uuid === display.template.uuid,
       );
       if (template) {
-        this.selectedTemplateId = template.uuid;
-        // this.onSelectedRoomChange(template);
         this.onSelectedTemplateChange(template.uuid);
         if (template) {
           this.header = template.header;
@@ -239,7 +205,6 @@ export default {
       }
     }
   },
-
   data() {
     return {
       startDate: new Date(this.initialStartDate.getTime()),
@@ -247,7 +212,6 @@ export default {
       endDate: new Date(this.initialEndDate.getTime()),
       endTime: this.initialEndDate.toTimeString().substring(0, 5),
       eventDescription: this.initialDescription,
-      selectedTemplateId: this.initialTemplate,
       templateId: this.initialTemplate,
       override: this.initialOverride || false,
       include: this.initialInclude || false,
@@ -255,13 +219,31 @@ export default {
       imageFields: this.initialImageFields || [],
       textBoxData: this.initialImageFields || [],
       selectedRoom: this.initialRoom,
-      selectedRoomIndex: null,
       roomTextBoxData: [],
       indexUp: null,
       roomData: [],
     };
   },
   computed: {
+    scheduledContent() {
+      let displaySchedules =
+        this.$store.state.displaySchedules[this.displayUuid];
+      
+      if (displaySchedules)
+        displaySchedules = displaySchedules.map((item) => {
+          item._rowVariant = item.disabled ? "danger" : "";
+          item.startDate = new Date(item.startDate);
+          item.endDate = new Date(item.endDate);
+          if (item.eventId) {
+            item.originalStartDate = new Date(item.originalStartDate);
+            item.originalEndDate = new Date(item.originalEndDate);
+          }
+          item.primaryKey = item.uuid || item.eventId;
+          return item;
+        });
+      return displaySchedules;
+    },
+    
     resolutionUuid() {
       let display = this.$store.state.displays.find(
         (d) => d.uuid === this.displayUuid,
@@ -271,6 +253,18 @@ export default {
       );
 
       return resolution ? resolution.uuid : null;
+    },
+    template() {
+      return this.display.template;
+    },
+    templateUuid() {
+      return this.display.template.uuid;
+    },
+    display() {
+      let display = this.$store.state.displays.find(
+        (d) => d.uuid === this.displayUuid,
+      );
+      return display;
     },
     roomCodes() {
       let display = this.$store.state.displays.find(
@@ -291,7 +285,7 @@ export default {
       );
       return this.onSelectedTemplateChange(display.template);
     },
-    shouldShowTemplateSection() {
+    shouldShowRoomSection() {
       let display = this.$store.state.displays.find(
         (d) => d.uuid === this.displayUuid,
       );
@@ -308,15 +302,37 @@ export default {
     },
   },
   methods: {
-    passFunction() {
-      let display = this.$store.state.displays.find(
-        (d) => d.uuid === this.displayUuid,
-      );
-      return display.roomCodes.length == 1;
+    checkNoEventWithin30Min(startDate, endDate) {
+      let displaySchedules =this.$store.state.displaySchedules[this.displayUuid].filter(e => e.uuid !== this.uuid);
+     if (displaySchedules) {
+        if (this.override) return true;
+    
+        const thirtyMinutesInMs = 30 * 60 * 1000;
+    
+        const endThreshold = new Date(endDate.getTime() + thirtyMinutesInMs);
+        const startThreshold = new Date(startDate.getTime() - thirtyMinutesInMs);
+    
+        const startsWithin30MinBefore = displaySchedules.some(
+          (e) => {
+            const eventStart = new Date(e.startDate);
+            const eventEnd = new Date(e.endDate);
+            return eventStart < startDate && eventEnd > startThreshold;
+          }
+        );
+    
+        const endsWithin30MinAfter = displaySchedules.some(
+          (e) => {
+            const eventStart = new Date(e.startDate);
+            const eventEnd = new Date(e.endDate);
+            return eventEnd > endDate && eventStart < endThreshold;
+          }
+        );
+    
+        return !startsWithin30MinBefore && !endsWithin30MinAfter;
+      }
+      return true;
     },
     checkForDuplicates() {
-      // If there are no "OTHER" fields, filter for duplicates
-      //if (otherFields.length === 0) {
       const filteredTextBoxData = this.textBoxData.filter(
         (imageField) =>
           !(imageField.repeat && imageField.isRepeated) ||
@@ -336,9 +352,7 @@ export default {
     handleTextBoxData(data) {
       this.textBoxData = data;
     },
-    updateRoomTextBoxData() {
-     
-    },
+    updateRoomTextBoxData() {},
     handleRoomData(data) {
       this.roomTextBoxData = data;
     },
@@ -352,13 +366,79 @@ export default {
       this.selectedRoomIndex =
         selectedRoomIndex !== -1 ? selectedRoomIndex + 1 : null;
     },
+    onSelectedTemplateChange(value) {
+      let template = this.$store.state.templates.find((t) => t.uuid === value);
+      
+      if (template && template.multipleRoom) {
+        // Set header, footer, and room data from the template
+        this.header = template.header;
+        this.footer = template.footer;
+        this.roomData = template.roomData;
+        // Filter out non-repeated fields from the template
+        const repeatedFields = template.displayContent.imageFields.filter(
+          (field) => field.repeat,
+        );
 
-    refreshImagePreview() {
-      this.$refs.imagePreview1.refreshImageCanvas();
-      this.$refs.imagePrevieww.refreshImageCanvas();
+        // Populate textBoxData if it's null
+        if (!this.textBoxData) {
+          this.textBoxData = repeatedFields.map((field) => ({
+            xPos: field.xPos,
+            yPos: field.yPos,
+            width: field.width,
+            height: field.height,
+            customText: field.customText,
+            fieldType: field.fieldType,
+            fontSize: field.fontSize,
+            bold: field.bold,
+            italic: field.italic,
+            image: field.image,
+            showDeleteButton: field.showDeleteButton,
+            border: field.border,
+            repeat: field.repeat,
+            isRepeated: field.isRepeated,
+          }));
+        } else {
+          // Filter out duplicate fields and add new fields from the template
+          const newFields = repeatedFields.filter(
+            (field) =>
+              !this.textBoxData.some(
+                (textBox) =>
+                textBox.fieldType === field.fieldType
+              ),
+          );
+          const newData = [...this.textBoxData, ...newFields];
+          // Handle room-specific data if necessary
+          if (template.multipleRoom) {
+            const start = template.roomData[1];
+            const end = start + template.roomData[2];
+            this.textBoxData = newData.filter(
+              (box) => box.yPos >= start && box.yPos < end,
+            );
+          } else {
+            this.textBoxData = newData;
+          }
+        }
+
+        // Emit updated textBoxData
+        this.$emit("updateTextBoxData", this.textBoxData);
+        this.$emit("textBoxData", this.textBoxData);
+      } else {
+        const newFields = template.displayContent.imageFields.filter(
+          (field) =>
+            !this.textBoxData.some(
+              (textBox) =>
+                textBox.fieldType === field.fieldType
+            ),
+        );
+        const newData = [...this.textBoxData, ...newFields];
+        this.textBoxData = newData;
+        this.$emit("updateTextBoxData", newData);
+        this.$emit("textBoxData", newData);
+      }
     },
+
     submitSchedule() {
-      if (this.checkForDuplicates()) {
+    if (this.checkForDuplicates()) {
         const {
           startDate,
           endDate,
@@ -368,41 +448,31 @@ export default {
           uuid,
           override,
           include,
-          textBoxData,
-          //selectedRoomIndex,
         } = this;
         let display = this.$store.state.displays.find(
-                (d) => d.uuid === this.displayUuid,
-              );
-              if (display.roomCodes.length > 1) {
-                // Perform null check before accessing nested properties
-                let template = this.$store.state.templates.find(
-                  (t) => t.uuid === display.template.uuid,
-                );
-                if (template && template.multipleRoom) {
-                  const start = template.roomData[1];
-                  const end = start + template.roomData[2];
-                  this.textBoxData = this.textBoxData.filter(
-                    (box) => box.yPos >= start && box.yPos < end,
-                  );
-                  this.$emit("textBoxData", this.textBoxData);
-                }
-              }
+          (d) => d.uuid === this.displayUuid,
+        );
+        if (display.roomCodes.length > 1) {
+          // Perform null check before accessing nested properties
+          let template = this.$store.state.templates.find(
+            (t) => t.uuid === display.template.uuid,
+          );
+          if (template && template.multipleRoom) {
+            const start = template.roomData[1];
+            const end = start + template.roomData[2];
+            this.textBoxData = this.textBoxData.filter(
+              (box) => box.yPos >= start && box.yPos < end,
+            );
+            this.$emit("textBoxData", this.textBoxData);
+          }
+        }
         let content = {
           scheduledContentUuid: uuid,
           displayContent: {
-            imageFields: this.textBoxData, //roomdata
-            // imageBase64: this.$refs.imagePrevieww.saveCanvas(),
+            imageFields: this.textBoxData,
           },
         };
 
-        if (this.selectedRoomIndex) {
-          content.displayContent.imageBase64 =
-            this.$refs.imagePreview1.saveCanvas(textBoxData);
-        } else {
-          content.displayContent.imageBase64 =
-            this.$refs.imagePrevieww.saveCanvas();
-        }
         let roomCodef = this.$store.state.rooms.find(
           (r) => r.name === this.selectedRoom,
         );
@@ -431,6 +501,23 @@ export default {
 
         data.endDate.setHours(parseInt(this.endTime.substring(0, 2)));
         data.endDate.setMinutes(parseInt(this.endTime.substring(3, 5)));
+        if (!this.checkNoEventWithin30Min(data.startDate, data.endDate)) {
+            this.$bvToast.toast("There are events existing 30 minutes before or after the given date, press override if you want to override it", {
+              title: "Error",
+              variant: "danger",
+              solid: true,
+            });
+            return;
+          }
+        if (data.startDate > data.endDate) {
+          this.$bvToast.toast("The End Date must come after the Start Date", {
+            title: "Error",
+            variant: "danger",
+            solid: true,
+          });
+          return;
+        }
+
         let storeOperation;
         if (this.editMode) {
           storeOperation = "updateDisplaySchedule";
@@ -460,65 +547,6 @@ export default {
           toastPresets.errorMessage,
         );
         return;
-      }
-    },
-    onSelectedTemplateChange(value) {
-      let template = this.$store.state.templates.find((t) => t.uuid === value);
-      //this.$emit("selectedTemplateId", value)
-      let newData = [];
-      if (template && template.displayContent && template.displayContent.imageFields ) {
-        // First, filter the image fields of the template where !isRepeated
-
-        const filteredTemplateFields = template.displayContent.imageFields.filter(
-          (f) =>
-            (f.yPos >= template.roomData[1] &&
-            f.yPos <= template.roomData[1] + template.roomData[2]) && f.isRepeated,
-        );
-        
-        const newFields= filteredTemplateFields.filter(field =>
-        // Filter out elements where x, y, width, or height are not equal
-        !this.textBoxData.some(textBox =>
-            textBox.xPos === field.xPos &&
-            textBox.yPos === field.yPos &&
-            textBox.width === field.width &&
-            textBox.height === field.height
-        )
-    );
-    // Push elements from `this.textBoxData` and filtered `template.displayContent.imageFields` to `newData`
-    newData.push(
-        ...this.textBoxData,
-        ...newFields
-    );
-
-        this.handleTextBoxData(newData);
-        this.textBoxData = newData;
-        this.$emit("updateTextBoxData", newData);
-        this.$emit("textBoxData", newData);
-      }
-    },
-    onSelectedRoomChange(template) {
-      if (template) {
-        let newData = [];
-        newData.push(...this.textBoxData);
-        
-        if (template.displayContent && template.displayContent.imageFields) {
-                 template.displayContent.imageFields.forEach((field) => {
-            let exists = this.textBoxData.some((textBox) => {
-              return (
-                textBox.xPos === field.xPos &&
-                textBox.yPos === field.yPos &&
-                textBox.width === field.width &&
-                textBox.height === field.height
-              );
-            });
-
-            if (!exists) {
-              newData.push({ ...field });
-            }
-          });
-        }
-        this.textBoxData = newData;
-        this.$emit("updateTextBoxData", this.textBoxData);
       }
     },
   },

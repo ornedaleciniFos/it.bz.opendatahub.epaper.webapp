@@ -130,6 +130,7 @@ export default {
     canvas.height = scaledHeight;
     this.getResolution();
     this.updateCanvasBorderSize();
+   
   },
   watch: {
     textBoxData: {
@@ -159,6 +160,12 @@ export default {
       },
       deep: true,
     },
+    invert: {
+        handler() {
+          this.updateCanvasBorderSize();
+        },
+        deep: true,
+      },
     indexUp(newValue) {
       this.$emit("updateIndexUp", newValue);
       this.updateCanvasBorderSize();
@@ -231,7 +238,7 @@ export default {
               width: image.width,
               height: image.height ,
               customText: "img",
-              fieldType: "EVENT_DESCRIPTION",
+              fieldType: "OTHER",
               fontSize: 0,
               bold: false,
               italic: false,
@@ -242,6 +249,7 @@ export default {
               isRepeated: false,
               created: new Date(),
               lastUpdate: new Date(),
+              invert:false,
             };
             this.boxes.push(newBox);
 
@@ -264,7 +272,7 @@ export default {
         width: 150,
         height: 100,
         customText: "Type here...",
-        fieldType: "EVENT_DESCRIPTION",
+        fieldType: "OTHER",
         fontSize: 22,
         bold: false,
         italic: false,
@@ -272,6 +280,7 @@ export default {
         showDeleteButton: true,
         border: false,
         repeat: false,
+        invert:false,
         isRepeated: false,
         created: new Date(),
         lastUpdate: new Date(),
@@ -304,6 +313,7 @@ export default {
           this.boxes[index].fontSize = data.fontSize;
           this.boxes[index].fieldType = data.fieldType;
           this.boxes[index].image = data.image;
+          this.boxes[index].invert = data.invert;
           this.boxes[index].border = data.border;
           this.boxes[index].repeat = data.repeat;
           this.boxes[index].isRepeated = data.isRepeated;
@@ -395,6 +405,7 @@ export default {
         bold: box.bold,
         italic: box.italic,
         image: box.image,
+        invert: box.invert,
         border: box.border,
         repeat: box.repeat,
         isRepeated: box.isRepeated,

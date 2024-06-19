@@ -23,8 +23,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
         <template #title>Information about scheduled events</template>
         <template #default>
           The "Plan new content" button allows you to add a new event. You can
-          add a description, time, template(if it is one room display), or room
-          selection (if it is multiple room display). <br />
+          add a description, time, room selection (if it is multiple events
+          display) <br />
           The "Preview details" button previews the display based on the
           event.<br />
           The "Edit" button allows modification of the event.<br />
@@ -148,10 +148,15 @@ export default {
       rowToEdit: null,
     };
   },
-  props: ["displayUuid"],
+  props: {
+    displayUuid: {
+      type: String,
+      required: true,
+    },
+  },
   computed: {
     scheduledContent() {
-      let displaySchedules =
+        let displaySchedules =
         this.$store.state.displaySchedules[this.displayUuid];
       if (displaySchedules)
         displaySchedules = displaySchedules.map((item) => {
@@ -180,45 +185,24 @@ export default {
     },
     toggleEditForm(item) {
       this.rowToEdit = item;
-
       if (item) {
         let display = this.$store.state.displays.find(
           (d) => d.uuid === this.displayUuid,
         );
-        let formProps = {};
-        if (display.roomCodes.length > 1) {
-          formProps = {
-            editMode: true,
-            eventId: item.eventId,
-            initialStartDate: item.startDate,
-            initialEndDate: item.endDate,
-            initialDescription: item.eventDescription,
-            initialTemplate: display.template.uuid,
-            displayUuid: this.displayUuid,
-            uuid: item.uuid,
-            initialOverride: item.override,
-            initialInclude: item.include,
-            initialImageFields:
-              item.displayContent && item.displayContent.imageFields,
-            
-          };
-        } else {
-          formProps = {
-            editMode: true,
-            eventId: item.eventId,
-            initialStartDate: item.startDate,
-            initialEndDate: item.endDate,
-            initialDescription: item.eventDescription,
-            initialTemplate: item.templateId,
-            displayUuid: this.displayUuid,
-            uuid: item.uuid,
-            initialOverride: item.override,
-            initialInclude: item.include,
-            initialImageFields:
-              item.displayContent && item.displayContent.imageFields,
-          };
-        }
-
+        let formProps = {
+          editMode: true,
+          eventId: item.eventId,
+          initialStartDate: item.startDate,
+          initialEndDate: item.endDate,
+          initialDescription: item.eventDescription,
+          initialTemplate: display.template.uuid,
+          displayUuid: this.displayUuid,
+          uuid: item.uuid,
+          initialOverride: item.override,
+          initialInclude: item.include,
+          initialImageFields:
+            item.displayContent && item.displayContent.imageFields,
+        };
         this.$router.push({
           name: "Display Schedule Form",
           params: formProps,
@@ -232,6 +216,20 @@ export default {
       });
     },
     deleteEventClick(item) {
+      let display = this.$store.state.displays.find(
+        (d) => d.uuid === this.displayUuid,
+      );
+      if (display.template.multipleRoom) {
+        this.$bvToast.toast(
+          "You are in the multiple events display. When you perform an operation, it takes some time for the other events data to be updated. Please wait! ",
+          {
+            title: "Warining",
+            variant: "warning",
+            autoHideDelay: 4000,
+            solid: true,
+          },
+        );
+      }
       this.$store.dispatch("deleteDisplaySchedule", item);
     },
   },

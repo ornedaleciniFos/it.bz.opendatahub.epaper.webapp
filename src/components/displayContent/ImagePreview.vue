@@ -8,7 +8,6 @@ SPDX-License-Identifier: AGPL-3.0-or-later
     <div class="canvas-wrapper">
       <button @click.prevent="addNewBox">Add Text Area</button>
       <label for="fileInput" class="upload-button">Upload Image</label>
-
       <div class="canvas-border">
         <input
           type="file"
@@ -23,7 +22,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
           ref="canvasRef"
           :width="canvasWidth + 'px'"
           :height="canvasHeight + 'px'"
-           style="overflow: auto" 
+          style="overflow: auto"
         ></canvas>
         <div
           v-for="(box, index) in boxes"
@@ -123,6 +122,13 @@ export default {
     canvas.height = scaledHeight;
     this.getResolution();
     this.updateCanvasBorderSize();
+    this.calculateWindowZoom();
+    // Attach event listener to window resize event
+    window.addEventListener("resize", this.calculateWindowZoom);
+  },
+  beforeDestroy() {
+    // Remove event listener when component is destroyed
+    window.removeEventListener("resize", this.calculateWindowZoom);
   },
   watch: {
     textBoxData: {
@@ -158,10 +164,16 @@ export default {
       },
       deep: true,
     },
+    invert: {
+      handler() {
+        this.updateCanvasBorderSize();
+      },
+      deep: true,
+    },
     selectedTemplateId: {
       handler() {
         let template = this.$store.state.templates.find(
-          (t) => t.uuid === this.selectedTemplateId
+          (t) => t.uuid === this.selectedTemplateId,
         );
 
         if (
@@ -247,7 +259,7 @@ export default {
               width: image.width,
               height: image.height,
               customText: "img",
-              fieldType: "EVENT_DESCRIPTION",
+              fieldType: "OTHER",
               fontSize: 0,
               bold: false,
               italic: false,
@@ -258,6 +270,7 @@ export default {
               isRepeated: false,
               created: new Date(),
               lastUpdate: new Date(),
+              invert: false,
             };
             this.boxes.push(newBox);
 
@@ -280,7 +293,7 @@ export default {
         width: 150,
         height: 100,
         customText: "Type here...",
-        fieldType: "EVENT_DESCRIPTION",
+        fieldType: "OTHER",
         fontSize: 22,
         bold: false,
         italic: false,
@@ -288,6 +301,7 @@ export default {
         showDeleteButton: true,
         border: false,
         repeat: false,
+        invert: false,
         isRepeated: false,
         created: new Date(),
         lastUpdate: new Date(),
@@ -297,7 +311,7 @@ export default {
     },
     getResolution() {
       const resolution = this.$store.state.resolutions.find(
-        (r) => r.uuid === this.resolutionUuid
+        (r) => r.uuid === this.resolutionUuid,
       );
       const canvas = this.$refs.canvasRef;
       if (canvas && resolution) {
@@ -321,6 +335,7 @@ export default {
           this.boxes[index].fieldType = data.fieldType;
           this.boxes[index].image = data.image;
           this.boxes[index].border = data.border;
+          this.boxes[index].invert = data.invert;
           this.boxes[index].repeat = data.repeat;
           this.boxes[index].isRepeated = data.isRepeated;
 
@@ -350,7 +365,6 @@ export default {
             this.printTextBoxData();
           }
         }
-
         this.$emit("updateTextBoxData", this.boxes);
         this.$emit("boxes", this.boxes);
         this.$emit("textBoxData", this.boxes);
@@ -368,14 +382,21 @@ export default {
       }
       this.printTextBoxData();
     },
+    calculateWindowZoom(value) {
+      // Calculate the zoom level based on the ratio of the outer width of the window to its inner width
+      const zoomLevel = window.outerWidth / window.innerWidth;
+      // Update the window zoom
+      this.windowZoom = zoomLevel.toFixed(2); // Round to 2 decimal places
+      return value * this.windowZoom;
+    },
     updateCanvasBorderSize() {
       this.getResolution();
       const canvas = this.$refs.canvasRef;
       const ctx = canvas.getContext("2d");
-      const numLines = 5;
+      const numLines = this.roomData[0] - 1;
       let lineHeight = canvas.height / (numLines + 1);
       this.boxes = this.boxes.filter(
-        (box) => box.yPos + box.height <= canvas.height
+        (box) => box.yPos + box.height <= canvas.height,
       );
       let marginTop = 0;
       let marginBottom = 0;
@@ -460,6 +481,7 @@ export default {
         italic: box.italic,
         image: box.image,
         border: box.border,
+        invert: box.invert,
         repeat: box.repeat,
         isRepeated: box.isRepeated,
         created: box.created,
@@ -492,8 +514,13 @@ export default {
         const newX = event.clientX - this.startX;
         const newY = event.clientY - this.startY;
 
-        box.xPos = Math.max(0, Math.min(newX, canvasRect.width - box.width));
-        box.yPos = Math.max(0, Math.min(newY, canvasRect.height - box.height));
+        // Calculate the maximum allowed X position
+        const maxX = canvasRect.width - box.width;
+        box.xPos = Math.max(0, Math.min(newX, maxX));
+
+        // Calculate the maximum allowed Y position (if needed)
+        const maxY = canvasRect.height - box.height;
+        box.yPos = Math.max(0, Math.min(newY, maxY));
 
         this.$nextTick(() => {
           this.updateBoxDimensions(this.currentBoxIndex);
@@ -501,6 +528,36 @@ export default {
       }
     },
 
+    handleResize(event) {
+      if (this.isResizing) {
+        this.indexUp = this.currentBoxIndex;
+        const box = this.boxes[this.currentBoxIndex];
+        const originalWidth = box.width;
+        const originalHeight = box.height;
+
+        const deltaX = event.clientX - this.startX;
+        const deltaY = event.clientY - this.startY;
+
+        if (this.resizeType === "image" && box.image) {
+          // Ensure the width does not exceed the resolution width
+          const newWidth = Math.max(10, originalWidth + deltaX);
+          box.width = Math.min(newWidth, this.canvasWidth - box.xPos);
+          box.height = (box.width / originalWidth) * originalHeight;
+        } else if (this.resizeType === "text") {
+          // Ensure the width does not exceed the resolution width
+          const newWidth = Math.max(10, originalWidth + deltaX);
+          box.width = Math.min(newWidth, this.canvasWidth - box.xPos);
+          box.height = Math.max(10, originalHeight + deltaY);
+
+          this.$nextTick(() => {
+            this.updateBoxDimensions(this.currentBoxIndex);
+          });
+        }
+
+        this.startX = event.clientX;
+        this.startY = event.clientY;
+      }
+    },
     startResize(index, event, type) {
       this.indexUp = index;
       if (!this.boxes[index].isRepeated) {
@@ -516,34 +573,6 @@ export default {
         document.addEventListener("mouseup", this.stopResize);
       }
     },
-
-    handleResize(event) {
-      if (this.isResizing) {
-        this.indexUp = this.currentBoxIndex;
-        const box = this.boxes[this.currentBoxIndex];
-        const originalWidth = box.width;
-        const originalHeight = box.height;
-
-        const deltaX = event.clientX - this.startX;
-        const deltaY = event.clientY - this.startY;
-
-        if (this.resizeType === "image" && box.image) {
-          box.width = Math.max(10, originalWidth + deltaX);
-          box.height = (box.width / originalWidth) * originalHeight;
-        } else if (this.resizeType === "text") {
-          box.width = Math.max(10, originalWidth + deltaX);
-          box.height = Math.max(10, originalHeight + deltaY);
-
-          this.$nextTick(() => {
-            this.updateBoxDimensions(this.currentBoxIndex);
-          });
-        }
-
-        this.startX = event.clientX;
-        this.startY = event.clientY;
-      }
-    },
-
     stopResize() {
       this.isResizing = false;
       this.currentBoxIndex = null;

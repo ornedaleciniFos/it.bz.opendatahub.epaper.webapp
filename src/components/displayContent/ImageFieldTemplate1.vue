@@ -17,10 +17,10 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             <th>Y</th>
             <th>W</th>
             <th>H</th>
-            <th>𝐼talic</th>
-            <th>𝐁old</th>
+            <th>Italic</th>
+            <th>Bold</th>
             <th>Border</th>
-            <th :disabled="room < 2">Repeat</th>
+            <th>Invert</th>
             <th>Option</th>
           </tr>
         </thead>
@@ -126,11 +126,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
             </td>
             <td>
               <input
-                v-model="box.repeat"
+                v-if="box.customText && box.customText !== 'img'"
+                v-model="box.invert"
                 :disabled="box.isRepeated"
-                v-if="room >= 2"
                 type="checkbox"
               />
+              <input v-else disabled type="checkbox" />
             </td>
             <td>
               <button @click.prevent="deleteTextBox(index)">Delete</button>

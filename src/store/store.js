@@ -5,6 +5,8 @@
 import Vuex from "vuex";
 import Vue from "vue";
 import axios from "axios";
+import { ToastPlugin } from 'bootstrap-vue'
+Vue.use(ToastPlugin);
 
 Vue.use(Vuex);
 
@@ -18,6 +20,7 @@ export default new Vuex.Store({
     authenticated: false,
     axiosKeycloakConfig: null,
     dataLoaded: false,
+    updated:false,
   },
 
   getters: {
@@ -26,7 +29,8 @@ export default new Vuex.Store({
     rooms: state => state.rooms,
     resolutions: state => state.resolutions,
     displaySchedules: state => state.displaySchedules,
-    authenticated: state => state.authenticated
+    authenticated: state => state.authenticated,
+    updated: state => state.updated,
   },
 
   mutations: {
@@ -50,6 +54,9 @@ export default new Vuex.Store({
     },
     SET_RESOLUTIONS(state, resolutions) {
       state.resolutions = resolutions;
+    },
+    SET_UPDATED(state, updated) {
+      state.updated = updated;
     },
     SET_DISPLAY_SCHEDULE(state, { schedule, displayUuid }) {
       Vue.set(state.displaySchedules, displayUuid, schedule);
@@ -207,9 +214,34 @@ export default new Vuex.Store({
     },
 
     loadDisplaySchedule({ commit }, displayUuid) {
-      axios
-        .get(this.state.URI + `/ScheduledContent/all?displayUuid=${displayUuid}`, this.state.axiosKeycloakConfig)
-        .then(response => commit("SET_DISPLAY_SCHEDULE", { schedule: response.data, displayUuid }));
+     let responseReceived = false;
+       const toast = this._vm.$bvToast;
+      commit("SET_UPDATED", false);
+  // Set a timeout to alert if the response is not received in time
+  const timeout = setTimeout(() => {
+    if (!responseReceived) {
+      toast.toast(
+        "Fetching the events, please wait.. ",
+        {
+          title: "Info",
+          variant: "info",
+          solid: true,
+          autoHideDelay: 20000,
+          toaster: 'b-toaster-top-center'
+        }
+      );
+      }
+  },2000 ); // Timeout set to 5 seconds (5000 milliseconds)
+  axios
+    .get(this.state.URI + `/ScheduledContent/all?displayUuid=${displayUuid}`, this.state.axiosKeycloakConfig)
+    .then(response => {
+      responseReceived = true;
+      clearTimeout(timeout); // Clear the timeout if the response is received in time
+      commit("SET_DISPLAY_SCHEDULE", { schedule: response.data, displayUuid });
+      commit("SET_UPDATED", { updated: responseReceived });
+    })
+   
+      
     },
 
     createDisplay({ commit }, display) {
@@ -288,11 +320,23 @@ export default new Vuex.Store({
 
     deleteDisplaySchedule({ commit }, schedule) {
       const URL = this.state.URI + "/ScheduledContent/delete/" + schedule.uuid;
+        const toast = this._vm.$bvToast;
       return axios
         .delete(URL, this.state.axiosKeycloakConfig)
         .then(() => {
           commit("DELETE_DISPLAY_SCHEDULE", schedule)
+           toast.toast(
+            "The event is deleted",
+            {
+              title: "Info",
+              variant: "info",
+              solid: true,
+              autoHideDelay: 3000,
+              toaster: 'b-toaster-top-center'
+            }
+          );
           return Promise.resolve();
+          
         })
         .catch(err => {
           // eslint-disable-next-line
@@ -376,6 +420,7 @@ export default new Vuex.Store({
           console.log(err);
           return Promise.reject(err.response.data);
         });
+        
     },
 
     updateScheduledContent({ commit }, data) {
@@ -387,9 +432,28 @@ export default new Vuex.Store({
       postData.append("image", data.image);
       //URL = `${this.state.URI}/ScheduledContent/set-template-image/${data.scheduledContentUuid}?templateUuid=${data.templateUuid}`;
       //postData = data.displayContent;
+      let responseReceived = false;
+       const toast = this._vm.$bvToast;
+  // Set a timeout to alert if the response is not received in time
+  const timeout = setTimeout(() => {
+        if (!responseReceived) {
+          toast.toast(
+            "Please wait until all the events are updated. You will be turned back automatically to the previous page when the process is finished ",
+            {
+              title: "Info",
+              variant: "info",
+              solid: true,
+              autoHideDelay: 10000,
+               toaster: 'b-toaster-top-center'
+            }
+          );
+        }
+      }, 2000);
       return axios
         .post(URL, postData, this.state.axiosKeycloakConfig)
         .then(() => {
+          responseReceived = true;
+          clearTimeout(timeout);
           commit("UPDATE_SCHEDULED_CONTENT", { scheduledContentUuid: data.scheduledContentUuid, displayContent: data.displayContent });
           return Promise.resolve();
         })
